@@ -30,11 +30,14 @@ export interface Round {
   submissions: Submission[];
 
   votes: Vote[];
+
+  wordLimit: number;
 }
 
 export interface LeagueConfiguration {
   name: string;
-  wordLimit: number;
+
+  creator?: Player;
 }
 
 export interface FriendLeague {
@@ -45,12 +48,11 @@ export interface FriendLeague {
 }
 
 export const DEFAULT_FRIEND_LEAGUE: FriendLeague = {
-  leagueId: "1",
+  leagueId: '1',
   players: [],
   rounds: [],
   config: {
     name: "Friend League",
-    wordLimit: 100,
   },
 };
 
@@ -59,5 +61,6 @@ export const DEFAULT_ROUND: Round = {
     prompt: "",
     status: "not started",
     submissions: [],
-    votes: []
+    votes: [],
+    wordLimit: 100,
 };
