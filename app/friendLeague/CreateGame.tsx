@@ -202,7 +202,7 @@ function PromptSetup() {
               onChange={updatePrompt}
               className='w-full border-b resize-none h-24'
               required
-              autoFocus
+              autoFocus={key > 0}
               rows={2}
               wrap='hard'
               maxLength={200}

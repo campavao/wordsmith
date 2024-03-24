@@ -5,10 +5,6 @@ import Link from "next/link";
 function Home() {
   const { data: session } = useSession();
 
-  // console.log(session);
-
-  // return <div>herllo</div>;
-
   const handleLogin = async () => {
     await signIn("google");
   };

@@ -2,7 +2,7 @@
 import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import Link from "next/link";
-import { FormEvent, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { joinGame } from "../utils/leagueUtils";
 import { isPlayer, LeagueId } from "../types/FriendLeague";
 import { CreateGame } from "./CreateGame";

@@ -1,4 +1,3 @@
-import { Session } from "next-auth";
 import { LeagueId, Player } from "../types/FriendLeague";
 import { Prompt } from "../friendLeague/CreateGame";
 
@@ -6,12 +5,9 @@ export async function getGame({ player, leagueId }: JoinGame) {
   if (!player || !leagueId) {
     throw new Error("No player or leagueId supplied");
   }
-  const response = await fetch(
-    `/api/league?leagueId=${leagueId}`,
-    {
-      method: "GET"
-    }
-  );
+  const response = await fetch(`/api/league?leagueId=${leagueId}`, {
+    method: "GET",
+  });
 
   return response.json();
 }
@@ -25,13 +21,10 @@ export async function joinGame({ player, leagueId }: JoinGame) {
   if (!player || !leagueId) {
     throw new Error("No player or leagueId supplied");
   }
-  const response = await fetch(
-    `/api/league`,
-    {
-      method: "PUT",
-      body: JSON.stringify({ player, leagueId }),
-    }
-  );
+  const response = await fetch(`/api/league`, {
+    method: "PUT",
+    body: JSON.stringify({ player, leagueId }),
+  });
 
   return response.json();
 }

@@ -13,6 +13,7 @@ export default function League({ params }: { params: { leagueId: string } }) {
 
   const fetchLeague = useCallback(async () => {
     if (!session || !isPlayer(session?.user)) {
+      setIsFetched(true);
       return;
     }
     const { data, message, error } = await getGame({
@@ -52,6 +53,17 @@ export default function League({ params }: { params: { leagueId: string } }) {
     );
   }
 
+  let isLeagueStarted = false;
+  let roundId = undefined;
+
+  if (league) {
+    isLeagueStarted = league.rounds.at(0)?.status !== "not started";
+
+    roundId = !isLeagueStarted
+      ? league.rounds.at(0)?.id
+      : league.rounds.find(({ status }) => status === "not started")?.id;
+  }
+
   return (
     <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
       <p>
@@ -63,12 +75,35 @@ export default function League({ params }: { params: { leagueId: string } }) {
       {league == null || error ? (
         <p className='text-red-500'>{error ?? "Game not found"}</p>
       ) : (
-        <div className='flex flex-col justify-center items-center gap-8'>
+        <div className='flex flex-col justify-center items-center gap-8 '>
           <h1 className='font-bold text-lg underline'>{league.config.name}</h1>
-          {league.rounds.map((round) => (
-            <RoundCard round={round} key={round.id} />
-          ))}
+          <ol className='w-[300px] list-decimal'>
+            <p>Authors</p>
+            {league.players.map((player, key) => (
+              <li key={player.name + key}>
+                <p className='flex gap-2'>
+                  {player.name}
+                  {league.config.creator?.email === player.email ? (
+                    <CrownIcon />
+                  ) : null}
+                </p>
+              </li>
+            ))}
+          </ol>
+          <ol className='w-[300px] list-decimal'>
+            <p>Rounds</p>
+            {league.rounds.map((round) => (
+              <li key={round.id}>
+                <RoundCard round={round} />
+              </li>
+            ))}
+          </ol>
         </div>
+      )}
+      {roundId && (
+        <Link href={`/league/${params.leagueId}/${roundId}`}>
+          {isLeagueStarted ? "Continue" : "Start"}
+        </Link>
       )}
       <Link href='/'>Back</Link>
     </div>
@@ -113,6 +148,35 @@ function CopyIcon() {
         <path d='M38.6031494,29.4603004H16.253952c-0.5615005,0-1.0159006,0.4543991-1.0159006,1.0158997   s0.4544001,1.0158997,1.0159006,1.0158997h22.3491974c0.5615005,0,1.0158997-0.4543991,1.0158997-1.0158997   S39.16465,29.4603004,38.6031494,29.4603004z' />
         <path d='M28.4444485,37.5872993H16.253952c-0.5615005,0-1.0159006,0.4543991-1.0159006,1.0158997   s0.4544001,1.0158997,1.0159006,1.0158997h12.1904964c0.5615025,0,1.0158005-0.4543991,1.0158005-1.0158997   S29.0059509,37.5872993,28.4444485,37.5872993z' />
       </g>
+    </svg>
+  );
+}
+
+function CrownIcon() {
+  return (
+    <svg
+      width='24px'
+      height='24px'
+      viewBox='0 0 24 24'
+      strokeWidth='1.5'
+      fill='none'
+      xmlns='http://www.w3.org/2000/svg'
+      color='#000000'
+    >
+      <path
+        d='M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22Z'
+        stroke='#000000'
+        strokeWidth='1.5'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      ></path>
+      <path
+        d='M16.8 15.5L18 8.5L13.8 10.6L12 8.5L10.2 10.6L6 8.5L7.2 15.5H16.8Z'
+        stroke='#000000'
+        strokeWidth='1.5'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      ></path>
     </svg>
   );
 }
