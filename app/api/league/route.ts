@@ -6,6 +6,8 @@ import {
 } from "@/app/types/FriendLeague";
 import { DEFAULT_FRIEND_LEAGUE } from "../../types/FriendLeague";
 import { Prompt } from "@/app/friendLeague/CreateGame";
+import addData from "../firebase/addData";
+import getDoc from "../firebase/getData";
 
 // Get game
 export async function GET(request: Request) {
@@ -19,7 +21,19 @@ export async function GET(request: Request) {
     return Response.json({ message: "no league id", error: true });
   }
 
-  const game = games[leagueId];
+  let game: FriendLeague | undefined = undefined;
+
+  try {
+    const document = await getDoc("games", leagueId);
+
+    game = document.data() as FriendLeague | undefined;
+
+    if (!document.exists()) {
+      return Response.json({ message: "game doesn't exist", error: true });
+    }
+  } catch (e) {
+    console.error(e);
+  }
 
   if (game == null) {
     return Response.json({ message: "league id isn't valid", error: true });
@@ -28,7 +42,6 @@ export async function GET(request: Request) {
   return Response.json({
     message: "joining game",
     data: game,
-    games,
   });
 }
 
@@ -51,13 +64,16 @@ export async function POST(request: Request) {
     rounds: getRounds(payload.prompts),
   };
 
-  games = { ...games, [league.leagueId]: league };
+  try {
+    await addData("games", league.leagueId, league);
 
-  return Response.json({
-    message: "creating game",
-    data: league,
-    games,
-  });
+    return Response.json({
+      message: "creating with firebase game",
+      data: league,
+    });
+  } catch (err) {
+    throw new Error(err as string);
+  }
 }
 
 // Join game
@@ -70,35 +86,37 @@ export async function PUT(request: Request) {
   const leagueId = data.leagueId;
 
   // find game
-  const game = games[leagueId];
+  try {
+    const document = await getDoc("games", leagueId);
+    const game = document.data() as FriendLeague | undefined;
+    console.log(game);
+    if (game == null) {
+      return Response.json({ message: "league id isn't valid", error: true });
+    }
 
-  if (game == null) {
-    return Response.json({ message: "league id isn't valid", error: true });
+    const updatedGame = {
+      ...game,
+      players: [...game.players, player],
+    };
+
+    if (game.players.find((p) => p.email === player.email)) {
+      return Response.json({ message: "already in game", data: updatedGame });
+    }
+
+    if (game.config.maxPlayers === game.players.length) {
+      return Response.json({ message: "game is full", error: true });
+    }
+
+    return Response.json({
+      message: "joining game",
+      data: updatedGame,
+    });
+  } catch (e) {
+    console.error(e);
+    return Response.json({ message: "server error", error: true });
   }
-
-  if (game.players.find((p) => p.email === player.email)) {
-    return Response.json({ message: "already in game", error: true });
-  }
-
-  if (game.config.maxPlayers === game.players.length) {
-    return Response.json({ message: "game is full", error: true });
-  }
-
-  const updatedGame = {
-    ...game,
-    players: [...game.players, player],
-  };
-
-  games = { ...games, [leagueId]: updatedGame };
-
-  return Response.json({
-    message: "joining game",
-    data: updatedGame,
-    games,
-  });
 }
 
-let games: Record<string, FriendLeague> = {};
 
 function createLeagueId(length: number) {
   let randomCode = "";
