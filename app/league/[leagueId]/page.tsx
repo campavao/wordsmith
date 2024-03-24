@@ -12,7 +12,7 @@ export default function League({ params }: { params: { leagueId: string } }) {
   const [error, setError] = useState<string>("");
 
   const fetchLeague = useCallback(async () => {
-    if (!isPlayer(session?.user)) {
+    if (!session || !isPlayer(session?.user)) {
       return;
     }
     const { data, message, error } = await getGame({
@@ -25,7 +25,7 @@ export default function League({ params }: { params: { leagueId: string } }) {
     } else {
       setLeague(data);
     }
-  }, [params.leagueId, session?.user]);
+  }, [params.leagueId, session]);
 
   useEffect(() => {
     if (!isFetched) {
