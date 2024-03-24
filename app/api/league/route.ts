@@ -113,9 +113,10 @@ function createLeagueId(length: number) {
 }
 
 function getRounds(prompts: Prompt[]): Round[] {
-  return prompts.map(({ id, text: prompt }) => ({
+  return prompts.map(({ id, text: prompt, wordLimit }) => ({
     ...DEFAULT_ROUND,
     prompt,
     id,
+    wordLimit,
   }));
 }

@@ -87,9 +87,10 @@ function RoundCard({ round }: { round: Round }) {
       onClick={() => setIsOpened(false)}
       className='flex flex-col justify-center items-center gap-8 border-4 p-4 rounded border-black'
     >
-      <div>{round.id}</div>
-      <div>{round.prompt}</div>
-      <div>{round.status}</div>
+      <div>ID: {round.id}</div>
+      <div>Prompt: {round.prompt}</div>
+      <div>Word limit: {round.wordLimit}</div>
+      <div>Status: {round.status}</div>
     </button>
   );
 }

@@ -44,7 +44,7 @@ interface CreateGame {
 export interface CreateGamePayload {
   leagueName: string;
   maxPlayers: number;
-  picture: File;
+  picture?: File;
   prompts: Prompt[];
 }
 
