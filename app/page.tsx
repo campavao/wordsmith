@@ -2,8 +2,12 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 
-export default function Home() {
+function Home() {
   const { data: session } = useSession();
+
+  // console.log(session);
+
+  // return <div>herllo</div>;
 
   const handleLogin = async () => {
     await signIn("google");
@@ -25,3 +29,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default Home;

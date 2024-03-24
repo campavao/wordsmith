@@ -1,5 +1,7 @@
+import { Session } from "next-auth";
+
 export interface Player {
-  id: string;
+  id?: string; // TODO make this defined
   name: string;
   email: string;
 }
@@ -19,9 +21,9 @@ export interface Vote {
 }
 
 export interface Round {
-  title: string;
+  id: string;
 
-    /** One prompt for entire round for everyone */
+  /** One prompt for entire round for everyone */
   prompt: string;
 
   /** Current status of the round*/
@@ -37,6 +39,8 @@ export interface Round {
 export interface LeagueConfiguration {
   name: string;
 
+  maxPlayers: number;
+
   creator?: Player;
 }
 
@@ -48,19 +52,26 @@ export interface FriendLeague {
 }
 
 export const DEFAULT_FRIEND_LEAGUE: FriendLeague = {
-  leagueId: '1',
+  leagueId: "1",
   players: [],
   rounds: [],
   config: {
     name: "Friend League",
+    maxPlayers: 8,
   },
 };
 
 export const DEFAULT_ROUND: Round = {
-    title: "",
-    prompt: "",
-    status: "not started",
-    submissions: [],
-    votes: [],
-    wordLimit: 100,
+  id: "",
+  prompt: "",
+  status: "not started",
+  submissions: [],
+  votes: [],
+  wordLimit: 100,
 };
+
+export type LeagueId = string;
+
+export function isPlayer(user: Session["user"]): user is Player {
+  return user?.email != null && user?.name != null;
+}
