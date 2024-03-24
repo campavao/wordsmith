@@ -16,7 +16,8 @@ interface useGameState {
 }
 
 export function useGame({ leagueId, roundId }: useGameProps): useGameState {
-  const { data: session } = useSession();
+  const result = useSession();
+  const { data: session } = result;
   const [league, setLeague] = useState<FriendLeague>();
   const [isFetched, setIsFetched] = useState(false);
   const [error, setError] = useState<string>("");

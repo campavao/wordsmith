@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -10,6 +10,10 @@ import { useGame } from "@/app/hooks/useGame";
 import Link from "next/link";
 import { Sources } from "quill";
 import { UnprivilegedEditor } from "react-quill";
+import { addSubmission } from "@/app/utils/leagueUtils";
+import { useSession } from "next-auth/react";
+import { isPlayer } from "@/app/types/FriendLeague";
+import { Submission } from "../../../types/FriendLeague";
 
 const modules = {
   toolbar: [
@@ -31,8 +35,9 @@ export default function Round({
   };
 }) {
   const { round, error, isLoading } = useGame(params);
-
-  const [words, setWords] = useState<string>();
+  const { data: session } = useSession();
+  const [submission, setSubmission] = useState<Submission | undefined>();
+  const [words, setWords] = useState<string>("");
   const [wordCount, setWordCount] = useState<number>(0);
   const [title, setTitle] = useState<string>("");
   const [readyToSubmit, setReadyToSubmit] = useState<boolean>(false);
@@ -40,9 +45,28 @@ export default function Round({
   const wordLimit = round?.wordLimit ?? 1000;
   const prompt = round?.prompt;
 
-  const onSubmit = useCallback(() => {
-    console.log(title);
-  }, [title]);
+  const onSubmit = useCallback(async () => {
+    if (session && isPlayer(session.user)) {
+      try {
+        await addSubmission({
+          player: session.user,
+          roundId: params.roundId,
+          text: words,
+          title,
+          leagueId: params.leagueId,
+        });
+
+        setSubmission({
+          roundId: params.roundId,
+          playerId: session.user.id,
+          text: words,
+          title,
+        });
+      } catch (e: any) {
+        throw new Error(e);
+      }
+    }
+  }, [params.leagueId, params.roundId, session, title, words]);
 
   const onTyping = useCallback(
     (
@@ -65,6 +89,20 @@ export default function Round({
     []
   );
 
+  useEffect(() => {
+    const player = session?.user;
+    if (!submission && isPlayer(player)) {
+      const foundSubmission = round?.submissions.find(
+        (item) => item.playerId === player.id && item.roundId === params.roundId
+      );
+      if (foundSubmission) {
+        setSubmission(foundSubmission);
+        setTitle(foundSubmission.title);
+        setWords(foundSubmission.text);
+      }
+    }
+  }, [params.roundId, round?.submissions, session?.user, submission]);
+
   if (isLoading) {
     return (
       <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
@@ -79,6 +117,27 @@ export default function Round({
         <p className='text-red-500'>{error}</p>
         <Link href='/'>Back</Link>
       </div>
+    );
+  }
+
+  if (submission) {
+    return (
+      <main className='flex flex-col min-h-screen items-center'>
+        <h1 className='h1 font-bold text-lg mt-10'>Wordsmith</h1>
+        {prompt && (
+          <blockquote className='max-w-lg p-5'>
+            <p>{prompt}</p>
+          </blockquote>
+        )}
+        <div className='max-w-lg w-screen'>
+          <Preview title={title} words={words} />
+          <div className='border my-5' />
+          <p className='text-center'>
+            You have submitted. <br /> Waiting on everyone else to do the
+            same...
+          </p>
+        </div>
+      </main>
     );
   }
 
@@ -155,19 +214,23 @@ function Footer({
 
 function Preview({
   words,
+  title,
   setTitle,
 }: {
   words?: string;
-  setTitle: (title: string) => void;
+  title?: string;
+  setTitle?: (title: string) => void;
 }) {
   return (
     <div className='flex flex-col gap-4'>
       <input
-        className='border-b-[2px] text-center self-center'
+        className='border-b-[2px] text-center self-center disabled:bg-transparent disabled:border-b-0'
         maxLength={20}
         type='text'
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => setTitle?.(e.target.value)}
         placeholder='Title'
+        value={title}
+        disabled={title != null}
       />
       <ReactQuill
         readOnly

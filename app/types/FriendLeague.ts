@@ -1,21 +1,26 @@
 import { Session } from "next-auth";
 
 export interface Player {
-  id?: string; // TODO make this defined
+  id: string;
   name: string;
   email: string;
 }
 
-export type RoundStatus = "not started" | "create" | "vote" | "review";
+export type RoundStatus =
+  | "not started"
+  | "in progress"
+  | "voting"
+  | "completed";
 
 export interface Submission {
   playerId: string;
-  submissionId: string;
+  roundId: string;
   text: string;
+  title: string;
 }
 
 export interface Vote {
-  playerId: string;
+  playerEmail: string;
   submissionId: string;
   score: number;
 }
@@ -72,8 +77,8 @@ export const DEFAULT_ROUND: Round = {
 
 export type LeagueId = string;
 
-export function isPlayer(user: Session["user"]): user is Player {
-  return user?.email != null && user?.name != null;
+export function isPlayer(user: any): user is Player {
+  return user?.email != null && user?.name != null && user.id != null;
 }
 
 export const DEFAULT_PROMPTS: string[] = [

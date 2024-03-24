@@ -8,8 +8,6 @@ export default async function addData(
   id: string,
   data: any
 ): Promise<void> {
-  let error = null;
-
   try {
     await setDoc(doc(db, collection, id), data, {
       merge: true,

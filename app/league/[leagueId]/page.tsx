@@ -59,9 +59,11 @@ export default function League({ params }: { params: { leagueId: string } }) {
   if (league) {
     isLeagueStarted = league.rounds.at(0)?.status !== "not started";
 
-    roundId = !isLeagueStarted
-      ? league.rounds.at(0)?.id
-      : league.rounds.find(({ status }) => status === "not started")?.id;
+    const uncompletedGames = league.rounds.filter(
+      ({ status }) => status !== "completed"
+    );
+
+    roundId = uncompletedGames.at(0)?.id;
   }
 
   const isCreator = league?.config?.creator?.email === session?.user?.email;

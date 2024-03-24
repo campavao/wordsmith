@@ -1,4 +1,4 @@
-import { LeagueId, Player } from "../types/FriendLeague";
+import { LeagueId, Player, Submission } from "../types/FriendLeague";
 import { Prompt } from "../friendLeague/CreateGame";
 
 export async function getGame({ player, leagueId }: JoinGame) {
@@ -52,6 +52,35 @@ export async function createGame({ player, payload }: CreateGame) {
   const response = await fetch("/api/league", {
     method: "POST",
     body: JSON.stringify({ player, payload }),
+  });
+
+  return response.json();
+}
+
+interface AddSubmission {
+  title: string;
+  roundId: string;
+  player: Player;
+  text: string;
+  leagueId: string;
+}
+
+export async function addSubmission({
+  player,
+  text,
+  title,
+  roundId,
+  leagueId,
+}: AddSubmission) {
+  const submission: Submission = {
+    playerId: player.id,
+    roundId,
+    text,
+    title,
+  };
+  const response = await fetch(`/api/league/${roundId}`, {
+    method: "POST",
+    body: JSON.stringify({ player, submission, leagueId }),
   });
 
   return response.json();

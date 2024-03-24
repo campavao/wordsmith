@@ -34,7 +34,6 @@ const GLORY_TELLER_CONFIG: GloryTellerConfiguration = {
 
 export default function Book() {
   const { data: session } = useSession();
-  console.log(session);
 
   const [words, setWords] = useState<string>();
   const [wordCount, setWordCount] = useState<number>(0);
