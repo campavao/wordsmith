@@ -8,6 +8,7 @@ import { DEFAULT_FRIEND_LEAGUE } from "../../types/FriendLeague";
 import { Prompt } from "@/app/friendLeague/CreateGame";
 import addData from "../firebase/addData";
 import getDoc from "../firebase/getData";
+import updateData from "../firebase/updateData";
 
 // Get game
 export async function GET(request: Request) {
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   console.log("getting league");
   const { searchParams } = new URL(request.url);
   const leagueId = searchParams.get("leagueId");
-  const email = searchParams.get("playerEmail"); // do I need this for getting games?
+  const email = searchParams.get("playerEmail");
 
   if (leagueId == null) {
     return Response.json({ message: "no league id", error: true });
@@ -39,8 +40,12 @@ export async function GET(request: Request) {
     return Response.json({ message: "league id isn't valid", error: true });
   }
 
+  if (!game.players.find((player) => player.email === email)) {
+    return Response.json({ message: "not apart of game", error: true });
+  }
+
   return Response.json({
-    message: "joining game",
+    message: "getting game",
     data: game,
   });
 }
@@ -89,23 +94,27 @@ export async function PUT(request: Request) {
   try {
     const document = await getDoc("games", leagueId);
     const game = document.data() as FriendLeague | undefined;
-    console.log(game);
+
     if (game == null) {
       return Response.json({ message: "league id isn't valid", error: true });
     }
 
-    const updatedGame = {
-      ...game,
-      players: [...game.players, player],
-    };
-
     if (game.players.find((p) => p.email === player.email)) {
-      return Response.json({ message: "already in game", data: updatedGame });
+      return Response.json({ message: "already in game", data: game });
     }
 
     if (game.config.maxPlayers === game.players.length) {
       return Response.json({ message: "game is full", error: true });
     }
+
+    const players = [...game.players, player];
+
+    const updatedGame = {
+      ...game,
+      players,
+    };
+
+    await updateData("games", leagueId, "players", players);
 
     return Response.json({
       message: "joining game",

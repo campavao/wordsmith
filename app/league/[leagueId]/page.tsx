@@ -64,6 +64,8 @@ export default function League({ params }: { params: { leagueId: string } }) {
       : league.rounds.find(({ status }) => status === "not started")?.id;
   }
 
+  const isCreator = league?.config?.creator?.email === session?.user?.email;
+
   return (
     <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
       <p>
@@ -90,14 +92,16 @@ export default function League({ params }: { params: { leagueId: string } }) {
               </li>
             ))}
           </ol>
-          <ol className='w-[300px] list-decimal'>
-            <p>Rounds</p>
-            {league.rounds.map((round) => (
-              <li key={round.id}>
-                <RoundCard round={round} />
-              </li>
-            ))}
-          </ol>
+          {isCreator && (
+            <ol className='flex flex-col gap-4 w-[50%] list-decimal'>
+              <p>Rounds</p>
+              {league.rounds.map((round) => (
+                <li key={round.id}>
+                  <RoundCard round={round} />
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
       )}
       {roundId && (
@@ -114,7 +118,11 @@ function RoundCard({ round }: { round: Round }) {
   const [isOpened, setIsOpened] = useState(false);
 
   if (!isOpened) {
-    return <button onClick={() => setIsOpened(true)}>{round.prompt}</button>;
+    return (
+      <button className='border-b pb-4' onClick={() => setIsOpened(true)}>
+        {round.prompt}
+      </button>
+    );
   }
 
   return (
