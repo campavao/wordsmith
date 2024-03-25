@@ -20,6 +20,7 @@ export function VotingStep({
   const playerId = session.user.id;
   const [error, setError] = useState<string>("");
   const [isDone, setIsDone] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [availableDownvotes, setAvailableDownvotes] = useState<number>(
     league.config.numberOfDownvotes
   );
@@ -37,7 +38,8 @@ export function VotingStep({
   );
 
   useEffect(() => {
-    if (availableSubmissions) {
+    if (!isLoaded && availableSubmissions) {
+      setIsLoaded(true);
       const roundVotes = round.votes.find((vote) => vote.playerId === playerId);
       const votedSubmissions = (roundVotes?.submissions ?? []).map(
         (item) => item.submissionId
@@ -54,7 +56,14 @@ export function VotingStep({
         setIsDone(true);
       }
     }
-  }, [availableSubmissions, playerId, round.votes, league.config, votes]);
+  }, [
+    availableSubmissions,
+    playerId,
+    round.votes,
+    league.config,
+    votes,
+    isLoaded,
+  ]);
 
   const submission = useMemo(
     () => availableSubmissions.at(currentIndex),
