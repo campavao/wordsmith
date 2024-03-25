@@ -107,6 +107,13 @@ export async function PUT(request: Request) {
       return Response.json({ message: "game is full", error: true });
     }
 
+    if (game.rounds.find((round) => round.status != "not started")) {
+      return Response.json({
+        message: "can't join a game that's in progress",
+        error: true,
+      });
+    }
+
     const players = [...game.players, player];
 
     const updatedGame = {

@@ -1,4 +1,4 @@
-import { FriendLeague } from "@/app/types/FriendLeague";
+import { FriendLeague, getUpdatedRoundStatus } from "@/app/types/FriendLeague";
 import addData from "../../firebase/addData";
 import getDoc from "../../firebase/getData";
 import { NextRequest } from "next/server";
@@ -46,7 +46,7 @@ export async function POST(
   { params }: { params: { roundId: string } }
 ) {
   // Your server-side logic here
-  const { player, submission, leagueId } = await request.json();
+  const { player, submission, playerVote, leagueId } = await request.json();
   const { roundId } = params;
 
   try {
@@ -65,19 +65,33 @@ export async function POST(
         error: true,
       });
     }
-    if (round.submissions.find((sub) => sub.playerId === player.id)) {
-      return Response.json({
-        message: "already submitted",
-        error: true,
-      });
+    if (submission) {
+      if (round.submissions.find((sub) => sub.playerId === player.id)) {
+        return Response.json({
+          message: "already submitted",
+          error: true,
+        });
+      }
+      round.submissions.push(submission);
     }
-    round.submissions.push(submission);
-    round.status =
-      round.status === "not started" ? "in progress" : round.status;
+
+    if (playerVote) {
+      if (round.votes.find((sub) => sub.playerId === player.id)) {
+        return Response.json({
+          message: "already votes",
+          error: true,
+        });
+      }
+      round.votes.push(playerVote);
+    }
+
+    round.status = getUpdatedRoundStatus(round, league);
+
     const updatedLeague = {
       ...league,
       rounds: [...league.rounds],
     };
+
     await addData("games", leagueId, updatedLeague);
 
     return Response.json({

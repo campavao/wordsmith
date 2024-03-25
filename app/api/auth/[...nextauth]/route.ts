@@ -1,7 +1,15 @@
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { FirestoreAdapter } from "@next-auth/firebase-adapter";
 import { cert } from "firebase-admin/app";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id?: string;
+    } & DefaultSession["user"];
+  }
+}
 
 const handler = NextAuth({
   providers: [
@@ -17,18 +25,22 @@ const handler = NextAuth({
       privateKey: process.env.FIREBASE_PRIVATE_KEY ?? "",
     }),
   }),
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
   callbacks: {
-    async session({ session, token }: any) {
-      if (session.user) {
+    session: async ({ session, token }) => {
+      if (session?.user) {
         session.user.id = token.sub;
       }
-
       return session;
     },
+    jwt: async ({ user, token }) => {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
+  },
+  session: {
+    strategy: "jwt",
   },
 });
 

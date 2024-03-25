@@ -1,4 +1,10 @@
-import { LeagueId, Player, Submission } from "../types/FriendLeague";
+import {
+  LeagueId,
+  Player,
+  PlayerVote,
+  Submission,
+  VotedSubmission,
+} from "../types/FriendLeague";
 import { Prompt } from "../friendLeague/CreateGame";
 
 export async function getGame({ player, leagueId }: JoinGame) {
@@ -63,6 +69,7 @@ interface AddSubmission {
   player: Player;
   text: string;
   leagueId: string;
+  id: string;
 }
 
 export async function addSubmission({
@@ -71,16 +78,45 @@ export async function addSubmission({
   title,
   roundId,
   leagueId,
+  id,
 }: AddSubmission) {
   const submission: Submission = {
     playerId: player.id,
     roundId,
     text,
     title,
+    id,
   };
+
   const response = await fetch(`/api/league/${roundId}`, {
     method: "POST",
     body: JSON.stringify({ player, submission, leagueId }),
+  });
+
+  return response.json();
+}
+
+interface AddVotes {
+  roundId: string;
+  player: Player;
+  leagueId: string;
+  votedSubmissions: VotedSubmission[];
+}
+
+export async function addVotes({
+  player,
+  roundId,
+  leagueId,
+  votedSubmissions,
+}: AddVotes) {
+  const playerVote: PlayerVote = {
+    playerId: player.id,
+    submissions: votedSubmissions,
+  };
+
+  const response = await fetch(`/api/league/${roundId}`, {
+    method: "POST",
+    body: JSON.stringify({ player, playerVote, leagueId }),
   });
 
   return response.json();

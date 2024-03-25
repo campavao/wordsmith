@@ -17,16 +17,18 @@ interface useGameState {
 
 export function useGame({ leagueId, roundId }: useGameProps): useGameState {
   const result = useSession();
-  const { data: session } = result;
+  const { data: session, update } = result;
   const [league, setLeague] = useState<FriendLeague>();
   const [isFetched, setIsFetched] = useState(false);
   const [error, setError] = useState<string>("");
 
   const fetchLeague = useCallback(async () => {
     if (!session || !isPlayer(session?.user)) {
-      setIsFetched(true);
+      // update the session for some reason
+      await update();
       return;
     }
+
     const { data, message, error } = await getGame({
       leagueId: leagueId,
       player: session.user,
@@ -34,16 +36,17 @@ export function useGame({ leagueId, roundId }: useGameProps): useGameState {
 
     if (error) {
       setError(message);
+      console.error(error);
     } else {
       setLeague(data);
+      setIsFetched(true);
     }
-  }, [leagueId, session]);
+  }, [leagueId, session, update]);
 
   useEffect(() => {
     if (!isFetched) {
       (async () => {
         await fetchLeague();
-        setIsFetched(true);
       })();
     }
   }, [fetchLeague, isFetched]);

@@ -13,16 +13,22 @@ export type RoundStatus =
   | "completed";
 
 export interface Submission {
+  id: string;
   playerId: string;
   roundId: string;
   text: string;
   title: string;
 }
 
-export interface Vote {
-  playerEmail: string;
+export interface VotedSubmission {
   submissionId: string;
   score: number;
+  comment: string;
+}
+
+export interface PlayerVote {
+  playerId: string;
+  submissions: VotedSubmission[];
 }
 
 export interface Round {
@@ -36,7 +42,7 @@ export interface Round {
 
   submissions: Submission[];
 
-  votes: Vote[];
+  votes: PlayerVote[];
 
   wordLimit: number;
 }
@@ -45,6 +51,10 @@ export interface LeagueConfiguration {
   name: string;
 
   maxPlayers: number;
+
+  numberOfUpvotes: number;
+
+  numberOfDownvotes: number;
 
   creator?: Player;
 }
@@ -63,6 +73,8 @@ export const DEFAULT_FRIEND_LEAGUE: FriendLeague = {
   config: {
     name: "Friend League",
     maxPlayers: 8,
+    numberOfUpvotes: 2,
+    numberOfDownvotes: 1,
   },
 };
 
@@ -93,3 +105,27 @@ export const DEFAULT_PROMPTS: string[] = [
   "A person discovers a book that accurately predicts the future, and they must decide whether to use this knowledge for the greater good or for personal gain.",
   "In a futuristic city, individuals start developing superhuman abilities, and the government must decide whether to control or embrace these newfound powers.",
 ];
+
+export function getUpdatedRoundStatus(
+  round: Round,
+  league: FriendLeague
+): RoundStatus {
+  switch (round.status) {
+    case "not started":
+      return "in progress";
+    case "in progress":
+      // check submissions length to see if it'd be last
+      if (round.submissions.length === league.players.length) {
+        return "voting";
+      }
+      return "in progress";
+    case "voting":
+      // check votes length to see if it'd be last
+      if (round.votes.length === league.players.length) {
+        return "completed";
+      }
+      return "voting";
+    default:
+      return "completed";
+  }
+}
