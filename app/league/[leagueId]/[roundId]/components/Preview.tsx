@@ -5,11 +5,13 @@ export function Preview({
   words,
   title,
   setTitle,
+  authorName,
 }: {
   isEditable?: boolean;
   words?: string;
   title?: string;
   setTitle?: (title: string) => void;
+  authorName?: string;
 }) {
   return (
     <div className='flex flex-col gap-4 min-h-[300px] w-full'>
@@ -24,6 +26,9 @@ export function Preview({
         value={title}
         disabled={!isEditable}
       />
+      {authorName && (
+        <p className='w-full text-center text-sm'>By: {authorName}</p>
+      )}
       <ReactQuill
         readOnly
         theme='snow'

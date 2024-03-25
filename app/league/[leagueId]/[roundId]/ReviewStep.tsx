@@ -34,7 +34,9 @@ export function ReviewStep({ round, league }: SharedStep) {
   const comments = useMemo(
     () => getComments(reviewSubmissions[currentIndex], league),
     [currentIndex, league, reviewSubmissions]
-  );
+    );
+
+    const authorName = useMemo(() => league.players.find(player => player.id === reviewSubmissions[currentIndex]?.playerId)?.name, [league, reviewSubmissions, currentIndex])
 
   return (
     <div>
@@ -45,6 +47,7 @@ export function ReviewStep({ round, league }: SharedStep) {
       <Preview
         words={reviewSubmissions[currentIndex]?.text}
         title={reviewSubmissions[currentIndex]?.title}
+        authorName={authorName}
         isEditable={false}
       />
       {comments.map((comment, key) => (

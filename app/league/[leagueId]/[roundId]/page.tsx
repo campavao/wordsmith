@@ -101,12 +101,19 @@ export default function Round({
               round={round}
               league={league}
             />
-            {nextRoundId && (
+            {nextRoundId ? (
               <Link
                 className='block w-full text-center p-1'
                 href={`/league/${params.leagueId}/${nextRoundId}`}
               >
                 Next round
+              </Link>
+            ) : (
+<Link
+                className='block w-full text-center p-1'
+                href={`/league/${params.leagueId}`}
+              >
+                Back
               </Link>
             )}
           </>

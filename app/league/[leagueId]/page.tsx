@@ -1,5 +1,10 @@
 "use client";
-import { FriendLeague, isPlayer, Round } from "@/app/types/FriendLeague";
+import {
+  FriendLeague,
+  isPlayer,
+  LeagueId,
+  Round,
+} from "@/app/types/FriendLeague";
 import { getGame } from "@/app/utils/leagueUtils";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -10,6 +15,8 @@ export default function League({ params }: { params: { leagueId: string } }) {
   const [league, setLeague] = useState<FriendLeague>();
   const [isFetched, setIsFetched] = useState(false);
   const [error, setError] = useState<string>("");
+  const [roundId, setRoundId] = useState<string | undefined>();
+  const [isLeagueStarted, setIsLeagueStarted] = useState(false);
 
   const fetchLeague = useCallback(async () => {
     if (!session || !isPlayer(session?.user)) {
@@ -45,6 +52,39 @@ export default function League({ params }: { params: { leagueId: string } }) {
     alert("Copied the text: " + params.leagueId);
   }, [params.leagueId]);
 
+  useEffect(() => {
+    if (league) {
+      const isStarted = league.rounds.at(0)?.status !== "not started";
+      setIsLeagueStarted(isStarted);
+
+      const uncompletedGames = league.rounds.filter(
+        ({ status }) => status !== "completed"
+      );
+
+      if (uncompletedGames.length === 0) {
+        return;
+      }
+
+      const newRoundId = uncompletedGames.at(0)?.id;
+
+      if (newRoundId) {
+        const newRoundIndex = league.rounds.findIndex(
+          (round) => round.id === newRoundId
+        );
+        if (
+          newRoundIndex > 0 &&
+          league.rounds[newRoundIndex - 1]?.status === "completed" &&
+          league.rounds[newRoundIndex].status === "not started"
+        ) {
+          const currentId = league.rounds[newRoundIndex - 1].id;
+          setRoundId(currentId);
+        } else {
+          setRoundId(newRoundId);
+        }
+      }
+    }
+  }, [league]);
+
   if (!isFetched) {
     return (
       <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
@@ -52,37 +92,6 @@ export default function League({ params }: { params: { leagueId: string } }) {
       </div>
     );
   }
-
-  let isLeagueStarted = false;
-  let roundId = undefined;
-
-  if (league) {
-    isLeagueStarted = league.rounds.at(0)?.status !== "not started";
-
-    const uncompletedGames = league.rounds.filter(
-      ({ status }) => status !== "completed"
-    );
-
-    const newRoundId = uncompletedGames.at(0)?.id;
-
-    if (newRoundId) {
-      const newRoundIndex = league.rounds.findIndex(
-        (round) => round.id === newRoundId
-      );
-      if (
-        newRoundIndex > 0 &&
-        league.rounds[newRoundIndex - 1]?.status === "completed" &&
-        league.rounds[newRoundIndex].status === "not started"
-      ) {
-        const currentId = league.rounds[newRoundIndex - 1].id;
-        roundId = currentId;
-      } else {
-        roundId = newRoundId;
-      }
-    }
-  }
-
-  const isCreator = league?.config?.creator?.email === session?.user?.email;
 
   return (
     <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
@@ -103,19 +112,19 @@ export default function League({ params }: { params: { leagueId: string } }) {
               <li key={player.name + key}>
                 <p className='flex gap-2'>
                   {player.name}
-                  {league.config.creator?.email === player.email ? (
+                  {league.config.creator?.email === player.email && (
                     <CrownIcon />
-                  ) : null}
+                  )}
                 </p>
               </li>
             ))}
           </ol>
-          {isCreator && (
-            <ol className='flex flex-col gap-4 w-[50%] list-decimal'>
+          {league.rounds.find(isInProgressOrComplete) && (
+            <ol className='flex flex-col gap-4 w-full list-decimal'>
               <p>Rounds</p>
-              {league.rounds.map((round) => (
+              {league.rounds.filter(isInProgressOrComplete).map((round) => (
                 <li key={round.id}>
-                  <RoundCard round={round} />
+                  <RoundCard round={round} leagueId={params.leagueId} />
                 </li>
               ))}
             </ol>
@@ -132,7 +141,22 @@ export default function League({ params }: { params: { leagueId: string } }) {
   );
 }
 
-function RoundCard({ round }: { round: Round }) {
+function isInProgressOrComplete(round: Round) {
+  return round.status === "in progress" || round.status === "completed";
+}
+
+function RoundCard({ round, leagueId }: { round: Round; leagueId: LeagueId }) {
+  return (
+    <Link
+      href={`/league/${leagueId}/${round.id}`}
+      className='flex flex-col justify-center items-center gap-8 w-full p-4 rounded border-black'
+    >
+      {round.prompt}
+    </Link>
+  );
+}
+
+function AdminRoundCard({ round }: { round: Round }) {
   const [isOpened, setIsOpened] = useState(false);
 
   if (!isOpened) {
