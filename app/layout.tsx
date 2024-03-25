@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
+import { Analytics } from "@vercel/analytics/react";
+
 import { Libre_Baskerville } from "next/font/google";
-import './globals.css'
+import "./globals.css";
 
 import { getServerSession } from "next-auth";
 
@@ -27,6 +29,7 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <main className='m-20'>{children}</main>
         </SessionProvider>
+        <Analytics />
       </body>
     </html>
   );
