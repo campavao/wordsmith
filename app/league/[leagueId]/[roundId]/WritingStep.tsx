@@ -127,6 +127,7 @@ export function WritingStep({ leagueId, roundId, round, session }: SharedStep) {
       {!readyToSubmit && (
         <ReactQuill
           theme='snow'
+          className='w-full'
           placeholder='Compose your story'
           onChange={onTyping}
           modules={writingModules}
@@ -164,7 +165,7 @@ function Footer({
 }) {
   const overLimit = wordCount > limit;
   return (
-    <div className='flex justify-between'>
+    <div className='flex w-full justify-between'>
       {!showSubmit ? (
         <p className={`text-sm ${overLimit && "text-red-500"}`}>
           Word count: {wordCount} {overLimit && `(${limit - wordCount})`}

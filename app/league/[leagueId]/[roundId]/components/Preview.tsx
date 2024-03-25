@@ -12,7 +12,7 @@ export function Preview({
   setTitle?: (title: string) => void;
 }) {
   return (
-    <div className='flex flex-col gap-4 min-h-[300px]'>
+    <div className='flex flex-col gap-4 min-h-[300px] w-full'>
       <input
         className={`border-b-[2px] text-center self-center disabled:bg-transparent disabled:border-b-0 ${
           isEditable ? "" : "font-bold"

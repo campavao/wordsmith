@@ -133,7 +133,11 @@ export function VotingStep({
     return <div>Loading...</div>;
   }
 
-  const isSubmittable = availableDownvotes + availableUpvotes === 0;
+  const isSubmittable =
+    round.submissions.length <= 2
+      ? availableDownvotes !== league.config.numberOfDownvotes ||
+        availableUpvotes !== league.config.numberOfUpvotes
+      : availableDownvotes + availableUpvotes === 0;
 
   return (
     <div className='flex flex-col items-center'>
