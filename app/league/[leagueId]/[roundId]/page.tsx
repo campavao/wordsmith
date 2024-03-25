@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import { useGame } from "@/app/hooks/useGame";
 import { WritingStep } from "./WritingStep";
 import { VotingStep } from "./VotingStep";
+import { ReviewStep } from "./ReviewStep";
+import { useMemo } from "react";
 
 export default function Round({
   params,
@@ -17,6 +19,18 @@ export default function Round({
 }) {
   const { league, round, error, isLoading } = useGame(params);
   const { data: session } = useSession();
+
+  const nextRoundId = useMemo(() => {
+    if (league?.rounds) {
+      const currentIndex = league.rounds.findIndex(
+        ({ id }) => id === params.roundId
+      );
+
+      if (currentIndex !== -1 && league.rounds.length > currentIndex + 1) {
+        return league.rounds[currentIndex + 1].id;
+      }
+    }
+  }, [league?.rounds, params.roundId]);
 
   if (isLoading) {
     return (
@@ -57,9 +71,10 @@ export default function Round({
     round?.status === "not started" || round?.status === "in progress";
 
   const isVoting = round?.status === "voting";
+  const isCompleted = round?.status === "completed";
 
   return (
-    <div className='flex flex-col items-center'>
+    <div className='flex flex-col items-center gap-20'>
       <h1 className='h1 font-bold text-lg mt-10'>{league.config.name}</h1>
       <div className='max-w-lg w-screen'>
         {isWritingStep && (
@@ -77,6 +92,24 @@ export default function Round({
             round={round}
             league={league}
           />
+        )}
+        {isCompleted && (
+          <>
+            <ReviewStep
+              {...params}
+              session={session}
+              round={round}
+              league={league}
+            />
+            {nextRoundId && (
+              <Link
+                className='block w-full text-center p-1'
+                href={`/league/${params.leagueId}/${nextRoundId}`}
+              >
+                Next round
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>

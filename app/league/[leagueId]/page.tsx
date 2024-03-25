@@ -63,7 +63,23 @@ export default function League({ params }: { params: { leagueId: string } }) {
       ({ status }) => status !== "completed"
     );
 
-    roundId = uncompletedGames.at(0)?.id;
+    const newRoundId = uncompletedGames.at(0)?.id;
+
+    if (newRoundId) {
+      const newRoundIndex = league.rounds.findIndex(
+        (round) => round.id === newRoundId
+      );
+      if (
+        newRoundIndex > 0 &&
+        league.rounds[newRoundIndex - 1]?.status === "completed" &&
+        league.rounds[newRoundIndex].status === "not started"
+      ) {
+        const currentId = league.rounds[newRoundIndex - 1].id;
+        roundId = currentId;
+      } else {
+        roundId = newRoundId;
+      }
+    }
   }
 
   const isCreator = league?.config?.creator?.email === session?.user?.email;
