@@ -23,7 +23,7 @@ export function History() {
 
   return (
     <div className='border-t'>
-      <p className='underline p-5'>History</p>
+      <p className='underline p-5 text-center'>History</p>
       <ul className='flex flex-col items-center gap-4'>
         {player.history.map(
           (data: { name: string; leagueId: string }, key: string) => (
