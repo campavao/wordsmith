@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 export default function League({ params }: { params: { leagueId: string } }) {
-  const { data: session, update } = useSession();
+  const { data: session, update } = useSession({ required: true });
   const [league, setLeague] = useState<FriendLeague>();
   const [isFetched, setIsFetched] = useState(false);
   const [error, setError] = useState<string>("");
@@ -19,13 +19,24 @@ export default function League({ params }: { params: { leagueId: string } }) {
   const [isLeagueStarted, setIsLeagueStarted] = useState(false);
 
   const fetchLeague = useCallback(async () => {
-    if (!session || !isPlayer(session?.user)) {
-      await update();
+    let user = session?.user;
+
+    // this sometimes is out of data when you refresh the page
+    if (!session || !isPlayer(user)) {
+      const newSession = await update();
+      if (newSession) {
+        user = newSession?.user;
+      }
+    }
+
+    if (!user) {
+      setError("User not found");
       return;
     }
+
     const { data, message, error } = await getGame({
       leagueId: params.leagueId,
-      player: session.user,
+      player: user,
     });
 
     if (error) {
