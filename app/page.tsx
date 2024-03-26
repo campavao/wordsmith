@@ -1,6 +1,7 @@
 "use client";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { History } from "./components/History";
 
 function Home() {
   const { data: session } = useSession();
@@ -18,6 +19,7 @@ function Home() {
           <Link href='/globalLeague'>Global League</Link>
           <Link href='/profile'>Profile</Link>
           <button onClick={() => signOut()}>Sign out</button>
+          <History />
         </div>
       ) : (
         <button onClick={handleLogin}>Login</button>

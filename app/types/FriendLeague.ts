@@ -129,3 +129,15 @@ export function getUpdatedRoundStatus(
       return "completed";
   }
 }
+
+export const getNextRound = (league: FriendLeague, currentRoundId: string): string | undefined => {
+  if (league?.rounds) {
+    const currentIndex = league.rounds.findIndex(
+      ({ id }) => id === currentRoundId
+    );
+
+    if (currentIndex !== -1 && league.rounds.length > currentIndex + 1) {
+      return league.rounds[currentIndex + 1].id;
+    }
+  }
+}

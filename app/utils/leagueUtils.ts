@@ -122,3 +122,9 @@ export async function addVotes({
 
   return response.json();
 }
+
+export async function getPlayerData(playerId: string) {
+  const response = await fetch(`/api/player/${playerId}`)
+
+  return response.json()
+}

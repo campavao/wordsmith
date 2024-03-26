@@ -13,6 +13,7 @@ import { Sources } from "quill";
 import { UnprivilegedEditor } from "react-quill";
 import { Session } from "next-auth";
 import { v4 as uuid } from "uuid";
+import { useRouter } from "next/navigation";
 
 export interface SharedStep {
   roundId: string;
@@ -22,7 +23,14 @@ export interface SharedStep {
   league: FriendLeague;
 }
 
-export function WritingStep({ leagueId, roundId, round, session }: SharedStep) {
+export function WritingStep({
+  leagueId,
+  roundId,
+  round,
+  session,
+  league,
+}: SharedStep) {
+  const router = useRouter();
   const [readyToSubmit, setReadyToSubmit] = useState<boolean>(false);
   const [submission, setSubmission] = useState<Submission | undefined>();
   const [words, setWords] = useState<string>("");
@@ -51,11 +59,24 @@ export function WritingStep({ leagueId, roundId, round, session }: SharedStep) {
           title,
           id,
         });
+        const isLastPlayer = league.players.length - round.votes.length <= 1;
+        if (isLastPlayer) {
+          router.refresh();
+        }
       } catch (e: any) {
         throw new Error(e);
       }
     }
-  }, [leagueId, roundId, session, title, words]);
+  }, [
+    leagueId,
+    roundId,
+    session,
+    title,
+    words,
+    league.players.length,
+    round.votes.length,
+    router,
+  ]);
 
   const onTyping = useCallback(
     (

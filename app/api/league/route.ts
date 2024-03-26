@@ -8,7 +8,7 @@ import { DEFAULT_FRIEND_LEAGUE } from "../../types/FriendLeague";
 import { Prompt } from "@/app/friendLeague/CreateGame";
 import addData from "../firebase/addData";
 import getDoc from "../firebase/getData";
-import updateData from "../firebase/updateData";
+import { addToArray } from "../firebase/updateData";
 
 // Get game
 export async function GET(request: Request) {
@@ -72,6 +72,12 @@ export async function POST(request: Request) {
   try {
     await addData("games", league.leagueId, league);
 
+    // add game to player
+    await addToArray("users", player.id, "history", {
+      name: league.config.name,
+      leagueId: league.leagueId,
+    });
+
     return Response.json({
       message: "creating with firebase game",
       data: league,
@@ -100,6 +106,11 @@ export async function PUT(request: Request) {
     }
 
     if (game.players.find((p) => p.email === player.email)) {
+      // add game to player
+      await addToArray("users", player.id, "history", {
+        name: game.config.name,
+        leagueId: leagueId,
+      });
       return Response.json({ message: "already in game", data: game });
     }
 
@@ -121,7 +132,14 @@ export async function PUT(request: Request) {
       players,
     };
 
-    await updateData("games", leagueId, "players", players);
+    // add to game
+    await addToArray("games", leagueId, "players", player);
+
+    // add game to player
+    await addToArray("users", player.id, "history", {
+      name: game.config.name,
+      leagueId: leagueId,
+    });
 
     return Response.json({
       message: "joining game",

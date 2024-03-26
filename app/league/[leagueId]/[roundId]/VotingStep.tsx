@@ -8,6 +8,7 @@ import { Preview } from "./components/Preview";
 import { SharedStep } from "./WritingStep";
 import { useState, useEffect, useMemo, useCallback, ChangeEvent } from "react";
 import { addVotes } from "@/app/utils/leagueUtils";
+import { useRouter } from "next/navigation";
 
 export function VotingStep({
   roundId,
@@ -23,6 +24,7 @@ export function VotingStep({
   const [isLoaded, setIsLoaded] = useState(false);
   const [downvotes, setDownvotes] = useState<number>(0);
   const [upvotes, setUpvotes] = useState<number>(0);
+  const router = useRouter();
 
   const availableSubmissions = useMemo(
     () => round.submissions.filter((item) => item.playerId !== playerId),
@@ -118,8 +120,21 @@ export function VotingStep({
       }
 
       setIsDone(true);
+
+      const isLastPlayer = league.players.length - round.votes.length <= 1;
+      if (isLastPlayer) {
+        router.refresh();
+      }
     }
-  }, [session.user, votes, roundId, leagueId]);
+  }, [
+    session.user,
+    votes,
+    roundId,
+    leagueId,
+    router,
+    league,
+    round.votes.length,
+  ]);
 
   const { numberOfDownvotes, numberOfUpvotes } = league.config;
 
@@ -198,7 +213,7 @@ export function VotingStep({
               Next
             </button>
           </div>
-          <label className='flex gap-1 justify-center w-full '>
+          <label className='flex flex-col gap-1 justify-center w-full '>
             Comments
             <textarea
               onChange={onCommentChange}

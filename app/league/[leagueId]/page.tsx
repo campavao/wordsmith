@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 export default function League({ params }: { params: { leagueId: string } }) {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [league, setLeague] = useState<FriendLeague>();
   const [isFetched, setIsFetched] = useState(false);
   const [error, setError] = useState<string>("");
@@ -20,7 +20,7 @@ export default function League({ params }: { params: { leagueId: string } }) {
 
   const fetchLeague = useCallback(async () => {
     if (!session || !isPlayer(session?.user)) {
-      setIsFetched(true);
+      await update();
       return;
     }
     const { data, message, error } = await getGame({
@@ -33,7 +33,7 @@ export default function League({ params }: { params: { leagueId: string } }) {
     } else {
       setLeague(data);
     }
-  }, [params.leagueId, session]);
+  }, [params.leagueId, session, update]);
 
   useEffect(() => {
     if (!isFetched) {
@@ -120,7 +120,7 @@ export default function League({ params }: { params: { leagueId: string } }) {
             ))}
           </ol>
           {league.rounds.find(isInProgressOrComplete) && (
-            <ol className='flex flex-col gap-4 w-full list-decimal'>
+            <ol className='flex flex-col gap-4 w-full max-w-[700px] list-decimal'>
               <p>Rounds</p>
               {league.rounds.filter(isInProgressOrComplete).map((round) => (
                 <li key={round.id}>
