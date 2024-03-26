@@ -8,6 +8,7 @@ import { WritingStep } from "./WritingStep";
 import { VotingStep } from "./VotingStep";
 import { ReviewStep } from "./ReviewStep";
 import { useMemo } from "react";
+import { Footnote } from "./components/Footnote";
 
 export default function Round({
   params,
@@ -67,17 +68,17 @@ export default function Round({
     );
   }
 
-  const isWritingStep =
+  const isWriting =
     round?.status === "not started" || round?.status === "in progress";
 
   const isVoting = round?.status === "voting";
   const isCompleted = round?.status === "completed";
 
   return (
-    <div className='flex flex-col items-center gap-20'>
-      <h1 className='h1 font-bold text-lg mt-10'>{league.config.name}</h1>
+    <div className='flex flex-col items-center gap-12'>
+      <h1 className='h1 font-bold text-lg'>{league.config.name}</h1>
       <div className='max-w-lg w-screen'>
-        {isWritingStep && (
+        {isWriting && (
           <WritingStep
             {...params}
             session={session}
@@ -91,6 +92,14 @@ export default function Round({
             session={session}
             round={round}
             league={league}
+          />
+        )}
+        {(isWriting || isVoting) && (
+          <Footnote
+            round={round}
+            league={league}
+            action={isWriting ? "submitted" : "voted"}
+            isVoting={isVoting}
           />
         )}
         {isCompleted && (
@@ -109,7 +118,7 @@ export default function Round({
                 Next round
               </Link>
             ) : (
-<Link
+              <Link
                 className='block w-full text-center p-1'
                 href={`/league/${params.leagueId}`}
               >

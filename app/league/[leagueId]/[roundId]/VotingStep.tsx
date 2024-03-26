@@ -21,12 +21,8 @@ export function VotingStep({
   const [error, setError] = useState<string>("");
   const [isDone, setIsDone] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [availableDownvotes, setAvailableDownvotes] = useState<number>(
-    league.config.numberOfDownvotes
-  );
-  const [availableUpvotes, setAvailableUpvotes] = useState<number>(
-    league.config.numberOfUpvotes
-  );
+  const [downvotes, setDownvotes] = useState<number>(0);
+  const [upvotes, setUpvotes] = useState<number>(0);
 
   const availableSubmissions = useMemo(
     () => round.submissions.filter((item) => item.playerId !== playerId),
@@ -71,34 +67,30 @@ export function VotingStep({
   );
 
   const downvote = useCallback(() => {
-    if (availableDownvotes > 0) {
-      const currentScore = votes[currentIndex].score;
-      const newVotes = [...votes];
-      newVotes[currentIndex].score += -1;
-      setVotes(newVotes);
+    const currentScore = votes[currentIndex].score;
+    const newVotes = [...votes];
+    newVotes[currentIndex].score += -1;
+    setVotes(newVotes);
 
-      if (currentScore <= 0) {
-        setAvailableDownvotes(availableDownvotes - 1);
-      } else {
-        setAvailableUpvotes((prevUpvotes) => prevUpvotes + 1);
-      }
+    if (currentScore <= 0) {
+      setDownvotes(downvotes + 1);
+    } else {
+      setUpvotes((prevUpvotes) => prevUpvotes - 1);
     }
-  }, [availableDownvotes, currentIndex, votes]);
+  }, [downvotes, currentIndex, votes]);
 
   const upvote = useCallback(() => {
-    if (availableUpvotes > 0) {
-      const currentScore = votes[currentIndex].score;
-      const newVotes = [...votes];
-      newVotes[currentIndex].score += 1;
-      setVotes(newVotes);
+    const currentScore = votes[currentIndex].score;
+    const newVotes = [...votes];
+    newVotes[currentIndex].score += 1;
+    setVotes(newVotes);
 
-      if (currentScore >= 0) {
-        setAvailableUpvotes(availableUpvotes - 1);
-      } else {
-        setAvailableDownvotes((prevDownvotes) => prevDownvotes + 1);
-      }
+    if (currentScore >= 0) {
+      setUpvotes(upvotes + 1);
+    } else {
+      setDownvotes((prevDownvotes) => prevDownvotes - 1);
     }
-  }, [availableUpvotes, currentIndex, votes]);
+  }, [upvotes, currentIndex, votes]);
 
   const onCommentChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -114,7 +106,7 @@ export function VotingStep({
 
   const onSubmit = useCallback(async () => {
     if (isPlayer(session.user)) {
-      const { data, message, error } = await addVotes({
+      const { message, error } = await addVotes({
         player: session.user,
         roundId,
         leagueId,
@@ -129,15 +121,28 @@ export function VotingStep({
     }
   }, [session.user, votes, roundId, leagueId]);
 
+  const { numberOfDownvotes, numberOfUpvotes } = league.config;
+
+  const remainingDownvotes = numberOfDownvotes - downvotes;
+  const remainingUpvotes = numberOfUpvotes - upvotes;
+
+  const isValid = remainingDownvotes === 0 && remainingUpvotes === 0;
+
+  const isTwoPlayerValid = useMemo(
+    () =>
+      remainingDownvotes >= 0 &&
+      remainingUpvotes >= 0 &&
+      (remainingDownvotes !== numberOfDownvotes ||
+        remainingUpvotes !== numberOfUpvotes),
+    [remainingDownvotes, remainingUpvotes, numberOfDownvotes, numberOfUpvotes]
+  );
+
   if (!submission) {
     return <div>Loading...</div>;
   }
 
   const isSubmittable =
-    round.submissions.length <= 2
-      ? availableDownvotes !== league.config.numberOfDownvotes ||
-        availableUpvotes !== league.config.numberOfUpvotes
-      : availableDownvotes + availableUpvotes === 0;
+    round.submissions.length <= 2 ? isTwoPlayerValid : isValid;
 
   return (
     <div className='flex flex-col items-center'>
@@ -159,26 +164,22 @@ export function VotingStep({
 
         <div className='flex flex-col gap-3'>
           <div className='flex gap-4 justify-center w-full'>
-            <button
-              className='w-10'
-              disabled={isDone || availableDownvotes === 0}
-              onClick={downvote}
-            >
+            <button className='w-10' disabled={isDone} onClick={downvote}>
               -
             </button>
             <p>{votes[currentIndex].score}</p>
-            <button
-              className='w-10'
-              disabled={isDone || availableUpvotes === 0}
-              onClick={upvote}
-            >
+            <button className='w-10' disabled={isDone} onClick={upvote}>
               +
             </button>
           </div>
           {!isDone && (
             <div className='flex gap-4 justify-between w-full'>
-              <span>Available downvotes: {availableDownvotes}</span>
-              <span>Available upvotes: {availableUpvotes}</span>
+              <span className={`${remainingDownvotes < 0 && "text-red-500"}`}>
+                Available downvotes: {remainingDownvotes}
+              </span>
+              <span className={`${remainingUpvotes < 0 && "text-red-500"}`}>
+                Available upvotes: {remainingUpvotes}
+              </span>
             </div>
           )}
           <div className='flex justify-between w-full'>

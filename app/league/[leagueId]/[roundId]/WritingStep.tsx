@@ -94,7 +94,7 @@ export function WritingStep({ leagueId, roundId, round, session }: SharedStep) {
 
   if (submission) {
     return (
-      <div className='flex flex-col min-h-screen items-center'>
+      <div className='flex flex-col items-center'>
         {prompt && (
           <blockquote className='max-w-lg p-5'>
             <p>{prompt}</p>
@@ -115,9 +115,9 @@ export function WritingStep({ leagueId, roundId, round, session }: SharedStep) {
   }
 
   return (
-    <div className='flex flex-col min-h-screen items-center'>
+    <div className='flex flex-col items-center'>
       {prompt && (
-        <blockquote className='max-w-lg p-5'>
+        <blockquote className='max-w-lg p-5 italic text-sm'>
           <p>{prompt}</p>
         </blockquote>
       )}
@@ -127,7 +127,7 @@ export function WritingStep({ leagueId, roundId, round, session }: SharedStep) {
       {!readyToSubmit && (
         <ReactQuill
           theme='snow'
-          className='w-full'
+          className='w-full min-h-[300px]'
           placeholder='Compose your story'
           onChange={onTyping}
           modules={writingModules}

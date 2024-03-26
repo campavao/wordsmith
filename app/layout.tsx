@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: "Wordsmith",
   description:
     "Battle against your friends in a head to head story telling game",
+  icons: "./bookmark.svg",
 };
 
 export default async function RootLayout({

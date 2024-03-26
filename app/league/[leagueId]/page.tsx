@@ -156,30 +156,6 @@ function RoundCard({ round, leagueId }: { round: Round; leagueId: LeagueId }) {
   );
 }
 
-function AdminRoundCard({ round }: { round: Round }) {
-  const [isOpened, setIsOpened] = useState(false);
-
-  if (!isOpened) {
-    return (
-      <button className='border-b pb-4' onClick={() => setIsOpened(true)}>
-        {round.prompt}
-      </button>
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setIsOpened(false)}
-      className='flex flex-col justify-center items-center gap-8 border-4 p-4 rounded border-black'
-    >
-      <div>ID: {round.id}</div>
-      <div>Prompt: {round.prompt}</div>
-      <div>Word limit: {round.wordLimit}</div>
-      <div>Status: {round.status}</div>
-    </button>
-  );
-}
-
 function CopyIcon() {
   return (
     <svg

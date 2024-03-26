@@ -6,6 +6,7 @@ import {
   VotedSubmission,
 } from "../types/FriendLeague";
 import { Prompt } from "../friendLeague/CreateGame";
+import { Session } from "next-auth";
 
 export async function getGame({ player, leagueId }: JoinGame) {
   if (!player || !leagueId) {
@@ -22,7 +23,7 @@ export async function getGame({ player, leagueId }: JoinGame) {
 }
 
 interface JoinGame {
-  player: Player;
+  player: Session["user"] | Player; // sometimes the session doesn't have an id
   leagueId: LeagueId;
 }
 

@@ -11,7 +11,7 @@ import { Session } from "next-auth";
 export default function FriendLeague() {
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isJoining, setIsJoining] = useState<boolean>(false);
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
 
   const cancelCreate = useCallback(() => setIsCreating(false), []);
   const cancelJoin = useCallback(() => setIsJoining(false), []);
@@ -21,7 +21,7 @@ export default function FriendLeague() {
   }
 
   if (isJoining) {
-    return <Join session={session} cancel={cancelJoin} />;
+    return <Join session={session} cancel={cancelJoin} update={update} />;
   }
 
   if (isCreating) {
@@ -41,9 +41,10 @@ export default function FriendLeague() {
 export interface CreateOrJoinGame {
   cancel: () => void;
   session: Session;
+  update?: () => Promise<Session | null>;
 }
 
-function Join({ cancel, session }: CreateOrJoinGame) {
+function Join({ cancel, session, update }: CreateOrJoinGame) {
   const router = useRouter();
   const [error, setError] = useState<string>();
 
@@ -59,11 +60,16 @@ function Join({ cancel, session }: CreateOrJoinGame) {
     []
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+    hasTriedToUpdate?: boolean
+  ) => {
     e.preventDefault();
     setError("");
-    if (session == null || !isPlayer(session.user)) {
-      setError("User not found");
+
+    if (!isPlayer(session.user) && !hasTriedToUpdate && update) {
+      await update();
+      handleSubmit(e, true);
       return;
     }
 
