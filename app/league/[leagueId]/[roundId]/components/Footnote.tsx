@@ -25,14 +25,12 @@ export function Footnote({ round, league, action, isVoting }: Footnote) {
 
   const list = isVoting ? round.votes : round.submissions;
 
-  const waitingOnPlayers = useMemo(
-    () =>
-      league.players.filter(
-        ({ id }) =>
-          list.find(({ playerId }) => playerId !== id) || list.length === 0
-      ),
-    [league.players, list]
-  );
+  const waitingOnPlayers = useMemo(() => {
+    const doneIds = list.map(({ playerId }) => playerId);
+    return league.players.filter(
+      ({ id }) => list.length === 0 || !doneIds.includes(id)
+    );
+  }, [league.players, list]);
 
   return (
     <div className='min-h-[150px] background:white flex justify-center'>
@@ -45,13 +43,11 @@ export function Footnote({ round, league, action, isVoting }: Footnote) {
             </li>
           );
         })}
-        {waitingOnPlayers.map(({ name, id }) => {
-          return (
-            <li key={id}>
-              {name} has not {action}
-            </li>
-          );
-        })}
+        {waitingOnPlayers.map(({ name, id }) => (
+          <li key={id}>
+            {name} has not {action}
+          </li>
+        ))}
       </ol>
     </div>
   );
