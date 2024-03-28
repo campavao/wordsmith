@@ -1,3 +1,4 @@
+"client only";
 import {
   LeagueId,
   Player,
@@ -124,7 +125,7 @@ export async function addVotes({
 }
 
 export async function getPlayerData(playerId: string) {
-  const response = await fetch(`/api/player/${playerId}`)
+  const response = await fetch(`/api/player/${playerId}`);
 
-  return response.json()
+  return response.json();
 }

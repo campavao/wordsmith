@@ -7,7 +7,6 @@ import { joinGame } from "../utils/leagueUtils";
 import { isPlayer, LeagueId } from "../types/FriendLeague";
 import { CreateGame } from "./CreateGame";
 import { Session } from "next-auth";
-import { History } from "../components/History";
 
 export default function FriendLeague() {
   const [isCreating, setIsCreating] = useState<boolean>(false);
@@ -35,7 +34,6 @@ export default function FriendLeague() {
       <button onClick={() => setIsJoining(true)}>Find</button>
       <button onClick={() => setIsCreating(true)}>Create</button>
       <Link href='/'>Back</Link>
-      <History />
     </div>
   );
 }

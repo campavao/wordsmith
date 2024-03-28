@@ -1,28 +1,28 @@
+"server only";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { DocumentData } from "firebase/firestore";
-import { getPlayerData } from "../utils/leagueUtils";
+import { getServerSession } from "next-auth/next";
+import getDocument from "../api/firebase/getData";
+import { authOptions } from "../api/auth";
 
-export function History() {
-  const { data: session } = useSession();
-  const [player, setPlayer] = useState<DocumentData | undefined>();
+export async function History() {
+  const session = await getServerSession(authOptions);
+  const playerId = session?.user?.id;
 
-  useEffect(() => {
-    (async () => {
-      if (!player && session?.user?.id) {
-        const { data: playerData } = await getPlayerData(session.user.id);
-        setPlayer(playerData);
-      }
-    })();
-  }, [player, session?.user?.id]);
+  if (!playerId) {
+    console.log("no session id");
+    return;
+  }
+
+  const entry = await getDocument("users", playerId);
+  const player = entry.exists() ? entry.data() : {};
 
   if (!player?.history) {
+    console.log("no history found");
     return;
   }
 
   return (
-    <div className='border-t'>
+    <div className='border-t' suppressHydrationWarning>
       <p className='underline p-5 text-center'>History</p>
       <ul className='flex flex-col items-center gap-4'>
         {player.history.map(
