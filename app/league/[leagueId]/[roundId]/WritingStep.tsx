@@ -1,82 +1,34 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Preview } from "./components/Preview";
 import { ReactQuill, writingModules } from "./components/Quill";
-import { addSubmission } from "@/app/utils/leagueUtils";
-import {
-  FriendLeague,
-  isPlayer,
-  Round,
-  Submission,
-} from "@/app/types/FriendLeague";
+
 import { Sources } from "quill";
 import { UnprivilegedEditor } from "react-quill";
-import { Session } from "next-auth";
-import { v4 as uuid } from "uuid";
-import { useRouter } from "next/navigation";
 
-export interface SharedStep {
-  roundId: string;
-  leagueId: string;
-  round: Round;
-  session: Session;
-  league: FriendLeague;
+interface WritingStepClient {
+  limit: number;
+  onSubmit: (text: string, title: string) => Promise<void>;
+  prompt: string;
+  foundText?: string;
+  foundTitle?: string;
 }
 
-export function WritingStep({
-  leagueId,
-  roundId,
-  round,
-  session,
-  league,
-}: SharedStep) {
-  const router = useRouter();
+export function WritingStepClient({
+  limit,
+  prompt,
+  onSubmit,
+  foundText,
+  foundTitle,
+}: WritingStepClient) {
   const [readyToSubmit, setReadyToSubmit] = useState<boolean>(false);
-  const [submission, setSubmission] = useState<Submission | undefined>();
-  const [words, setWords] = useState<string>("");
+  const [words, setWords] = useState<string>(foundText ?? "");
   const [wordCount, setWordCount] = useState<number>(0);
-  const [title, setTitle] = useState<string>("");
-  const wordLimit = round?.wordLimit ?? 1000;
-  const prompt = round?.prompt;
+  const [title, setTitle] = useState<string>(foundTitle ?? "");
 
-  const onSubmit = useCallback(async () => {
-    if (session && isPlayer(session.user)) {
-      try {
-        const id = uuid();
-        await addSubmission({
-          player: session.user,
-          roundId: roundId,
-          text: words,
-          title,
-          leagueId: leagueId,
-          id,
-        });
-
-        setSubmission({
-          roundId: roundId,
-          playerId: session.user.id,
-          text: words,
-          title,
-          id,
-        });
-        const isLastPlayer = league.players.length - round.votes.length <= 1;
-        if (isLastPlayer) {
-          router.refresh();
-        }
-      } catch (e: any) {
-        throw new Error(e);
-      }
-    }
-  }, [
-    leagueId,
-    roundId,
-    session,
-    title,
-    words,
-    league.players.length,
-    round.votes.length,
-    router,
-  ]);
+  const onClientSubmit = useCallback(async () => {
+    await onSubmit(words, title);
+  }, [onSubmit, words, title]);
 
   const onTyping = useCallback(
     (
@@ -99,21 +51,7 @@ export function WritingStep({
     []
   );
 
-  useEffect(() => {
-    const player = session?.user;
-    if (!submission && isPlayer(player)) {
-      const foundSubmission = round?.submissions.find(
-        (item) => item.playerId === player.id && item.roundId === roundId
-      );
-      if (foundSubmission) {
-        setSubmission(foundSubmission);
-        setTitle(foundSubmission.title);
-        setWords(foundSubmission.text);
-      }
-    }
-  }, [roundId, submission, session?.user, round?.submissions]);
-
-  if (submission) {
+  if (foundText && foundTitle) {
     return (
       <div className='flex flex-col items-center'>
         {prompt && (
@@ -159,9 +97,9 @@ export function WritingStep({
       <div className='border-b w-10 my-5 self-center' />
       <Footer
         showSubmit={readyToSubmit}
-        onSubmit={onSubmit}
+        onSubmit={onClientSubmit}
         wordCount={wordCount}
-        limit={wordLimit}
+        limit={limit}
         setReadyToSubmit={setReadyToSubmit}
         disabled={(readyToSubmit && title === "") || wordCount === 0}
       />

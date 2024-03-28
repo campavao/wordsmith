@@ -16,7 +16,7 @@ export function Preview({
   return (
     <div className='flex flex-col gap-4 min-h-[300px] w-full'>
       <input
-        className={`border-b-[2px] text-center self-center disabled:bg-transparent disabled:border-b-0 ${
+        className={`border-b-[2px] text-center self-center w-72 disabled:bg-transparent disabled:border-b-0 ${
           isEditable ? "" : "font-bold"
         }`}
         maxLength={50}
