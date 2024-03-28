@@ -12,6 +12,7 @@ import { getServerSession, Session } from "next-auth";
 import { authOptions } from "./auth";
 import { redirect } from "next/navigation";
 import addData from "./firebase/addData";
+import { addToArray } from "./firebase/updateData";
 
 type ServerResponse = { data?: FriendLeague; error?: true; message: string };
 
@@ -73,13 +74,13 @@ interface AddSubmission {
   roundId: string;
 }
 
-export async function addSubmission({
+export async function updateRoundForUser({
   player,
   submission,
   playerVote,
   leagueId,
   roundId,
-}: AddSubmission): Promise<any> {
+}: AddSubmission): Promise<ServerResponse> {
   try {
     const serverLeague = await getDocument("games", leagueId);
     if (!serverLeague.exists()) {

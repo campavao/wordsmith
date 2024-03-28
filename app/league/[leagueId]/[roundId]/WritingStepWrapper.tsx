@@ -1,4 +1,9 @@
-import { addSubmission, getPlayer, getServerGame } from "@/app/api/apiUtils";
+"use server"
+import {
+  updateRoundForUser,
+  getPlayer,
+  getServerGame,
+} from "@/app/api/apiUtils";
 import { Submission } from "@/app/types/FriendLeague";
 import { v4 as uuid } from "uuid";
 import { WritingStepClient } from "./WritingStep";
@@ -41,7 +46,7 @@ export async function WritingStep({ leagueId, roundId }: SharedStep) {
       id,
     };
 
-    await addSubmission({
+    await updateRoundForUser({
       player,
       roundId,
       leagueId,
@@ -65,7 +70,7 @@ export async function WritingStep({ leagueId, roundId }: SharedStep) {
   return (
     <WritingStepClient
       limit={limit}
-      onSubmit={onSubmit}
+      onWritingSubmit={onSubmit}
       prompt={prompt}
       foundText={activeSubmission?.text}
       foundTitle={activeSubmission?.title}

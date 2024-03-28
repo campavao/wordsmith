@@ -1,3 +1,4 @@
+"use server";
 import Link from "next/link";
 import { Footnote } from "./components/Footnote";
 import { getPlayer, getServerGame } from "@/app/api/apiUtils";
@@ -81,7 +82,7 @@ export default async function Round({
         )}
         {isCompleted && (
           <>
-            <ReviewStep {...params} round={round} league={league} />
+            {/* <ReviewStep {...params} round={round} league={league} /> */}
             {nextRoundId && (
               <Link
                 className='block w-full text-center p-1'

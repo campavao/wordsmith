@@ -8,7 +8,7 @@ import { UnprivilegedEditor } from "react-quill";
 
 interface WritingStepClient {
   limit: number;
-  onSubmit: (text: string, title: string) => Promise<void>;
+  onWritingSubmit: (text: string, title: string) => Promise<void>;
   prompt: string;
   foundText?: string;
   foundTitle?: string;
@@ -17,7 +17,7 @@ interface WritingStepClient {
 export function WritingStepClient({
   limit,
   prompt,
-  onSubmit,
+  onWritingSubmit,
   foundText,
   foundTitle,
 }: WritingStepClient) {
@@ -27,8 +27,8 @@ export function WritingStepClient({
   const [title, setTitle] = useState<string>(foundTitle ?? "");
 
   const onClientSubmit = useCallback(async () => {
-    await onSubmit(words, title);
-  }, [onSubmit, words, title]);
+    await onWritingSubmit(words, title);
+  }, [onWritingSubmit, words, title]);
 
   const onTyping = useCallback(
     (
