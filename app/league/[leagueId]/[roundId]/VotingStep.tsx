@@ -157,6 +157,17 @@ export function VotingStep({
     [remainingDownvotes, remainingUpvotes, numberOfDownvotes, numberOfUpvotes]
   );
 
+  const currentVote = useMemo(() => {
+    // weird and stupid, remove this when converting to SSR
+    if (isDone && submission) {
+      const foundVote = votes.find((i) => i.submissionId === submission.id);
+      if (foundVote) {
+        return foundVote;
+      }
+    }
+    return votes[currentIndex];
+  }, [currentIndex, isDone, submission, votes]);
+
   if (!submission) {
     return <div>Loading...</div>;
   }
@@ -187,7 +198,7 @@ export function VotingStep({
             <button className='w-10' disabled={isDone} onClick={downvote}>
               -
             </button>
-            <p>{votes[currentIndex].score}</p>
+            <p>{currentVote.score}</p>
             <button className='w-10' disabled={isDone} onClick={upvote}>
               +
             </button>
@@ -224,7 +235,7 @@ export function VotingStep({
               onChange={onCommentChange}
               className='w-full border-2 px-2 text-sm resize-none min-h-[100px]'
               maxLength={500}
-              value={votes[currentIndex].comment}
+              value={currentVote.comment}
               disabled={isDone}
             />
           </label>
