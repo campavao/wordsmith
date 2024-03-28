@@ -26,10 +26,15 @@ export function VotingStep({
   const [upvotes, setUpvotes] = useState<number>(0);
   const router = useRouter();
 
-  const availableSubmissions = useMemo(
-    () => round.submissions.filter((item) => item.playerId !== playerId),
-    [playerId, round.submissions]
-  );
+  const availableSubmissions = useMemo(() => {
+    // remove current player from voting for themselves
+    const filteredSubmissions = round.submissions.filter(
+      (item) => item.playerId !== playerId
+    );
+
+    // shuffle list so you don't know the order
+    return shuffle(filteredSubmissions ?? []);
+  }, [playerId, round.submissions]);
 
   const [votes, setVotes] = useState<VotedSubmission[]>(
     getVotes(availableSubmissions)
@@ -252,4 +257,13 @@ function getVotes(submissions: Submission[]): VotedSubmission[] {
     score: 0,
     comment: "",
   }));
+}
+
+// declare the function
+function shuffle<T extends object>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
