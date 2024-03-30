@@ -66,7 +66,7 @@ export default async function League({
             <ol className='w-[300px] list-decimal'>
               <p>Authors</p>
               {league.players.map((player, key) => (
-                <li key={player.name + key}>
+                <li key={player.name + key} title={player.email}>
                   <p className='flex gap-2'>
                     {player.name}
                     {league.config.creator?.email === player.email && (
@@ -93,6 +93,7 @@ export default async function League({
             {isStarted ? "Continue" : "Start"}
           </Link>
         )}
+        <Link href={`/league/${params.leagueId}/results`}>Results</Link>
       </Suspense>
       <Link href='/'>Back home</Link>
     </div>
