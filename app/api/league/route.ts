@@ -55,10 +55,16 @@ export async function POST(request: Request) {
   // Your server-side logic here
   const { player, payload } = await request.json();
 
+  const document = await getDoc("games", payload.leagueId);
+
+  if (document.exists()) {
+    return Response.json({ message: "game already exists", error: true });
+  }
+
   // create game
   const league: FriendLeague = {
     ...DEFAULT_FRIEND_LEAGUE,
-    leagueId: createLeagueId(5),
+    leagueId: payload.leagueId,
     config: {
       ...DEFAULT_FRIEND_LEAGUE.config,
       name: payload.leagueName,
@@ -79,8 +85,7 @@ export async function POST(request: Request) {
     });
 
     return Response.json({
-      message: "creating with firebase game",
-      data: league,
+      message: "created game",
     });
   } catch (err) {
     throw new Error(err as string);
@@ -118,7 +123,10 @@ export async function PUT(request: Request) {
       return Response.json({ message: "game is full", error: true });
     }
 
-    if (game.rounds.find((round) => round.status != "not started")) {
+    if (
+      game.rounds.at(0)?.status === "voting" ||
+      game.rounds.at(0)?.status === "completed"
+    ) {
       return Response.json({
         message: "can't join a game that's in progress",
         error: true,
@@ -143,7 +151,6 @@ export async function PUT(request: Request) {
 
     return Response.json({
       message: "joining game",
-      data: updatedGame,
     });
   } catch (e) {
     console.error(e);
@@ -152,17 +159,6 @@ export async function PUT(request: Request) {
 }
 
 
-function createLeagueId(length: number) {
-  let randomCode = "";
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    randomCode += characters[randomIndex];
-  }
-
-  return randomCode;
-}
 
 function getRounds(prompts: Prompt[]): Round[] {
   return prompts.map(({ id, text: prompt, wordLimit }) => ({

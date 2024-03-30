@@ -6,9 +6,14 @@ import {
   FormEvent,
   MouseEvent,
   useRef,
+  useMemo,
 } from "react";
 import Image from "next/image";
-import { createGame, CreateGamePayload } from "../utils/leagueUtils";
+import {
+  createGame,
+  CreateGamePayload,
+  createLeagueId,
+} from "../utils/leagueUtils";
 import { DEFAULT_PROMPTS, isPlayer } from "../types/FriendLeague";
 import { useRouter } from "next/navigation";
 import { CreateOrJoinGame } from "./FriendLeagueClient";
@@ -23,6 +28,7 @@ interface CreateGameForm {
 export function CreateGame({ player, cancel }: CreateOrJoinGame) {
   const router = useRouter();
   const imageRef = useRef<HTMLImageElement>(null);
+  const leagueId = useMemo(() => createLeagueId(5), []);
 
   const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -38,8 +44,11 @@ export function CreateGame({ player, cancel }: CreateOrJoinGame) {
           : [form.prompts];
 
       const payload: CreateGamePayload = {
+        leagueId,
         leagueName: form.leagueName.value,
         maxPlayers: form.maxPlayers.value,
+        numberOfUpvotes: form.numberOfUpvotes.value,
+        numberOfDownvotes: form.numberOfDownvotes.value,
         // picture: form.picture.files[0],
         prompts: prompts.map<Prompt>((item) => ({
           id: item.id,
@@ -48,10 +57,15 @@ export function CreateGame({ player, cancel }: CreateOrJoinGame) {
         })),
       };
 
-      const { data } = await createGame({ player, payload });
-      router.push(`/league/${data.leagueId}`);
+      const { error, message } = await createGame({ player, payload });
+
+      if (error) {
+        console.error(message);
+      }
+
+      router.push(`/league/${leagueId}`);
     },
-    [router, player]
+    [leagueId, player, router]
   );
 
   const onImageUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -99,10 +113,35 @@ export function CreateGame({ player, cancel }: CreateOrJoinGame) {
             name='maxPlayers'
             type='number'
             className='border-b w-8'
-            min={2}
+            min={3}
             max={8}
             required
             defaultValue={8}
+            aria-describedby='two-player-warning'
+          />
+        </label>
+        <label className='flex place-content-between'>
+          Required upvotes
+          <input
+            name='numberOfUpvotes'
+            type='number'
+            className='border-b w-8'
+            min={0}
+            max={8}
+            required
+            defaultValue={2}
+          />
+        </label>
+        <label className='flex place-content-between'>
+          Required downvotes
+          <input
+            name='numberOfDownvotes'
+            type='number'
+            className='border-b w-8'
+            min={0}
+            max={8}
+            required
+            defaultValue={1}
           />
         </label>
         {/* <label className='flex place-content-between'>

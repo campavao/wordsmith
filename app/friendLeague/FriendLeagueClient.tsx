@@ -54,7 +54,7 @@ function Join({ cancel, player }: CreateOrJoinGame) {
     setError("");
 
     try {
-      const { data, error, message } = await joinGame({
+      const { error, message } = await joinGame({
         player,
         leagueId: formData.leagueId,
       });
@@ -62,7 +62,7 @@ function Join({ cancel, player }: CreateOrJoinGame) {
         setError(message);
         return;
       }
-      router.push(`/league/${data.leagueId}`);
+      router.push(`/league/${formData.leagueId}`);
     } catch (err: any) {
       throw new Error(err);
     }

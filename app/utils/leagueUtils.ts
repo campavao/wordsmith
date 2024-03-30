@@ -46,8 +46,11 @@ interface CreateGame {
 }
 
 export interface CreateGamePayload {
+  leagueId: LeagueId;
   leagueName: string;
   maxPlayers: number;
+  numberOfUpvotes: number;
+  numberOfDownvotes: number;
   picture?: File;
   prompts: Prompt[];
 }
@@ -128,4 +131,16 @@ export async function getPlayerData(playerId: string) {
   const response = await fetch(`/api/player/${playerId}`);
 
   return response.json();
+}
+
+export function createLeagueId(length: number) {
+  let randomCode = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    randomCode += characters[randomIndex];
+  }
+
+  return randomCode;
 }
