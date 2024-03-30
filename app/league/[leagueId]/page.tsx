@@ -19,7 +19,7 @@ export default async function League({
     message,
   } = await getServerGame({
     leagueId: params.leagueId,
-    email: player.email,
+    playerId: player.id,
   });
 
   if (error) {
@@ -65,7 +65,7 @@ export default async function League({
             </h1>
             <ol className='w-[300px] list-decimal'>
               <p>Authors</p>
-              {league.players.map((player, key) => (
+              {Object.values(league.players).map((player, key) => (
                 <li key={player.name + key} title={player.email}>
                   <p className='flex gap-2'>
                     {player.name}

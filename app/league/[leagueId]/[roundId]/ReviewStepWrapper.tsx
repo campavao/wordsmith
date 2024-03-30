@@ -36,7 +36,7 @@ export async function ReviewStep({ roundId, leagueId }: SharedStep) {
     data: league,
     error,
     message,
-  } = await getServerGame({ leagueId, email: player.email });
+  } = await getServerGame({ leagueId, playerId: player.id });
 
   if (error) {
     return <Error message={message} />;
@@ -52,7 +52,10 @@ export async function ReviewStep({ roundId, leagueId }: SharedStep) {
     return <Error message='No round found' />;
   }
 
-  const reviewSubmissions = getReviewedSubmissions(round, league.players);
+  const reviewSubmissions = getReviewedSubmissions(
+    round,
+    Object.values(league.players)
+  );
 
   return <ReviewStepClient reviewSubmissions={reviewSubmissions} />;
 }

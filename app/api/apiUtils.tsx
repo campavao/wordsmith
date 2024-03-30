@@ -18,10 +18,10 @@ type ServerResponse = { data?: FriendLeague; error?: true; message: string };
 
 export async function getServerGame({
   leagueId,
-  email,
+  playerId,
 }: {
   leagueId: LeagueId;
-  email: string;
+  playerId: string;
 }): Promise<ServerResponse> {
   if (leagueId == null) {
     return { message: "no league id", error: true };
@@ -45,7 +45,7 @@ export async function getServerGame({
     return { message: "league id isn't valid", error: true };
   }
 
-  if (!game.players.find((player) => player.email === email)) {
+  if (!game.players[playerId]) {
     return { message: "not apart of game", error: true };
   }
 

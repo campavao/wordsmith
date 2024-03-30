@@ -10,7 +10,7 @@ export async function VotingStep({ roundId, leagueId }: SharedStep) {
     data: league,
     error,
     message,
-  } = await getServerGame({ leagueId, email: player.email });
+  } = await getServerGame({ leagueId, playerId: player.id });
 
   if (error) {
     return <Error message={message} />;
@@ -35,7 +35,8 @@ export async function VotingStep({ roundId, leagueId }: SharedStep) {
   const { numberOfDownvotes, numberOfUpvotes } = league.config;
 
   const isTwoPlayer = round.submissions.length <= 2;
-  const isLastPlayer = league.players.length - round.votes.length <= 1;
+  const isLastPlayer =
+    Object.values(league.players).length - round.votes.length <= 1;
 
   return (
     <VotingStepClient

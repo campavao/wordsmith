@@ -59,7 +59,7 @@ export interface LeagueConfiguration {
 
 export interface FriendLeague {
   leagueId: string;
-  players: Player[];
+  players: Record<string, Player>;
   rounds: Round[];
   config: LeagueConfiguration;
 }
@@ -101,13 +101,13 @@ export function getUpdatedRoundStatus(
       return "in progress";
     case "in progress":
       // check submissions length to see if it'd be last
-      if (round.submissions.length === league.players.length) {
+      if (round.submissions.length === Object.keys(league.players).length) {
         return "voting";
       }
       return "in progress";
     case "voting":
       // check votes length to see if it'd be last
-      if (round.votes.length === league.players.length) {
+      if (round.votes.length === Object.keys(league.players).length) {
         return "completed";
       }
       return "voting";

@@ -20,7 +20,7 @@ export default async function Round({
     data: league,
     error,
     message,
-  } = await getServerGame({ leagueId, email: user.email });
+  } = await getServerGame({ leagueId, playerId: user.id });
 
   if (error) {
     return (

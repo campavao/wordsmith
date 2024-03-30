@@ -14,7 +14,7 @@ export async function getGame({ player, leagueId }: JoinGame) {
     throw new Error("No player or leagueId supplied");
   }
   const response = await fetch(
-    `/api/league?leagueId=${leagueId}&playerEmail=${player.email}`,
+    `/api/league?leagueId=${leagueId}&playerId=${player.id}`,
     {
       method: "GET",
     }
