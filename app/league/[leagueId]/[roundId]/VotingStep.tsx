@@ -120,6 +120,8 @@ export function VotingStepClient({
     [remainingDownvotes, remainingUpvotes, numberOfDownvotes, numberOfUpvotes]
   );
 
+  const currentVote = votes[currentIndex];
+
   if (!submission) {
     return <div>Loading...</div>;
   }
@@ -149,7 +151,7 @@ export function VotingStepClient({
             <button className='w-10' disabled={isDone} onClick={downvote}>
               -
             </button>
-            <p>{votes[currentIndex].score}</p>
+            <p>{currentVote.score}</p>
             <button className='w-10' disabled={isDone} onClick={upvote}>
               +
             </button>
@@ -186,7 +188,7 @@ export function VotingStepClient({
               onChange={onCommentChange}
               className='w-full min-w-[200px] border-2 px-2 text-sm resize-none min-h-[100px] rounded-lg'
               maxLength={500}
-              value={votes[currentIndex].comment}
+              value={currentVote.comment}
               disabled={isDone}
             />
           </label>
