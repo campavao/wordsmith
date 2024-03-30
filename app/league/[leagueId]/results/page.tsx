@@ -11,7 +11,7 @@ export default async function ResultsPage({
   const player = await getPlayer();
   const result = await getServerGame({
     leagueId: params.leagueId,
-    email: player.email,
+    playerId: player.id,
   });
 
   if (result.error) {
@@ -31,7 +31,7 @@ export default async function ResultsPage({
 
   let rank = 1;
 
-  for (const player of game.players) {
+  for (const player of Object.values(game.players)) {
     const playerId = player.id;
 
     const totalScore = game.rounds.reduce((acc, round) => {
@@ -58,12 +58,13 @@ export default async function ResultsPage({
   }
 
   // sort highest to lowest, then rank
-  game.players
+  Object.values(game.players)
     .sort((a, b) => playerMap.get(b.id)! - playerMap.get(a.id)!)
     .forEach((player) => {
       // If the player has the same score as the previous player, assign them the same rank
       if (
-        playerMap.get(player.id) === playerMap.get(game.players[rank - 1].id)
+        playerMap.get(player.id) ===
+        playerMap.get(Object.values(game.players)[rank - 1].id)
       ) {
         playerRank.set(player.id, rank);
       } else {
@@ -85,7 +86,7 @@ export default async function ResultsPage({
           </tr>
         </thead>
         <tbody>
-          {game.players.map((player) => (
+          {Object.values(game.players).map((player) => (
             <tr key={player.id}>
               <td>#{playerRank.get(player.id)}</td>
               <td title={player.email}>{player.name}</td>

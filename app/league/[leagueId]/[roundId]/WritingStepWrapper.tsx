@@ -13,7 +13,7 @@ export async function WritingStep({ leagueId, roundId }: SharedStep) {
     data: league,
     error,
     message,
-  } = await getServerGame({ leagueId, email: player.email });
+  } = await getServerGame({ leagueId, playerId: player.id });
 
   if (error) {
     return <div>{message}</div>;
@@ -29,7 +29,8 @@ export async function WritingStep({ leagueId, roundId }: SharedStep) {
     return <div>No round found</div>;
   }
 
-  const isLastPlayer = league.players.length - round.submissions.length <= 1;
+  const isLastPlayer =
+    Object.values(league.players).length - round.submissions.length <= 1;
   const limit = round.wordLimit;
   const prompt = round.prompt;
 

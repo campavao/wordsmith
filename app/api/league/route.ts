@@ -7,7 +7,10 @@ import {
 import { Prompt } from "@/app/friendLeague/CreateGame";
 import addData from "../firebase/addData";
 import getDoc from "../firebase/getData";
-import { addToArray } from "../firebase/updateData";
+import updateDocument, {
+  addToArray,
+  addToRecord,
+} from "../firebase/updateData";
 
 // Get game
 export async function GET(request: Request) {
@@ -15,7 +18,7 @@ export async function GET(request: Request) {
   console.log("getting league");
   const { searchParams } = new URL(request.url);
   const leagueId = searchParams.get("leagueId");
-  const email = searchParams.get("playerEmail");
+  const playerId = searchParams.get("playerId");
 
   if (leagueId == null) {
     return Response.json({ message: "no league id", error: true });
@@ -39,7 +42,14 @@ export async function GET(request: Request) {
     return Response.json({ message: "league id isn't valid", error: true });
   }
 
-  if (!game.players.find((player) => player.email === email)) {
+  if (playerId == null) {
+    return Response.json({
+      message: "player id not found, please log out and try again",
+      error: true,
+    });
+  }
+
+  if (!game.players[playerId]) {
     return Response.json({ message: "not apart of game", error: true });
   }
 
@@ -70,7 +80,9 @@ export async function POST(request: Request) {
       maxPlayers: payload.maxPlayers,
       creator: player,
     },
-    players: [player],
+    players: {
+      [player.id]: player,
+    },
     rounds: getRounds(payload.prompts),
   };
 
@@ -109,7 +121,7 @@ export async function PUT(request: Request) {
       return Response.json({ message: "league id isn't valid", error: true });
     }
 
-    if (game.players.find((p) => p.email === player.email)) {
+    if (game.players[player.id]) {
       // add game to player
       await addToArray("users", player.id, "history", {
         name: game.config.name,
@@ -118,7 +130,7 @@ export async function PUT(request: Request) {
       return Response.json({ message: "already in game", data: game });
     }
 
-    if (game.config.maxPlayers === game.players.length) {
+    if (game.config.maxPlayers === Object.keys(game.players).length) {
       return Response.json({ message: "game is full", error: true });
     }
 
@@ -132,15 +144,8 @@ export async function PUT(request: Request) {
       });
     }
 
-    const players = [...game.players, player];
-
-    const updatedGame = {
-      ...game,
-      players,
-    };
-
     // add to game
-    await addToArray("games", leagueId, "players", player);
+    await updateDocument("games", leagueId, `players.${player.id}`, player);
 
     // add game to player
     await addToArray("users", player.id, "history", {

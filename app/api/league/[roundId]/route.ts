@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const leagueId = searchParams.get("leagueId");
-  const email = searchParams.get("playerEmail");
+  const playerId = searchParams.get("playerId");
 
   if (leagueId == null) {
     return Response.json({ message: "no league id", error: true });
@@ -30,7 +30,11 @@ export async function GET(request: Request) {
     return Response.json({ message: "league id isn't valid", error: true });
   }
 
-  if (!game.players.find((player) => player.email === email)) {
+  if (playerId == null) {
+    return Response.json({ message: "player id isn't found", error: true });
+  }
+
+  if (!game.players[playerId]) {
     return Response.json({ message: "not apart of game", error: true });
   }
 

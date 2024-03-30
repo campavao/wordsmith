@@ -4,6 +4,7 @@ import {
   updateDoc,
   FieldPath,
   arrayUnion,
+  FieldValue,
 } from "firebase/firestore";
 import firebase_app from "./firebase.config";
 
@@ -47,3 +48,25 @@ export async function addToArray(
 
   return result;
 }
+
+export async function addToRecord(
+  collection: string,
+  id: string,
+  field: string,
+  value: FieldValue
+) {
+  let docRef = doc(db, collection, id);
+
+  let result = null;
+
+  try {
+    result = await updateDoc(docRef, {
+      [field]: value,
+    });
+  } catch (e: any) {
+    throw new Error(e);
+  }
+
+  return result;
+}
+
