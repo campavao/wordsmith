@@ -158,10 +158,18 @@ export function VotingStepClient({
           </div>
           {!isDone && (
             <div className='flex gap-4 justify-between w-full'>
-              <span className={`${remainingDownvotes < 0 && "text-red-500"}`}>
+              <span
+                className={`${
+                  remainingDownvotes < 0 && "text-red-500"
+                } text-center sm:text-left`}
+              >
                 Available downvotes: {remainingDownvotes}
               </span>
-              <span className={`${remainingUpvotes < 0 && "text-red-500"}`}>
+              <span
+                className={`${
+                  remainingUpvotes < 0 && "text-red-500"
+                } text-center sm:text-left`}
+              >
                 Available upvotes: {remainingUpvotes}
               </span>
             </div>

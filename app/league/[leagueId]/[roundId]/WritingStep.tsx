@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, Ref } from "react";
 import { Preview } from "./components/Preview";
 import { ReactQuill, writingModules } from "./components/Quill";
 import { v4 as uuid } from "uuid";
@@ -35,6 +35,7 @@ export function WritingStepClient({
   const [wordCount, setWordCount] = useState<number>(0);
   const [title, setTitle] = useState<string>(foundTitle ?? "");
   const [isDone, setIsDone] = useState<boolean>(!!foundText && !!foundTitle);
+  const escapeButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
 
   const onSubmit = useCallback(async () => {
@@ -120,6 +121,11 @@ export function WritingStepClient({
           onChange={onTyping}
           modules={writingModules}
           value={text}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              escapeButtonRef.current?.focus();
+            }
+          }}
         />
       )}
       {readyToSubmit && <Preview setTitle={setTitle} words={text} />}
@@ -131,6 +137,7 @@ export function WritingStepClient({
         limit={limit}
         setReadyToSubmit={setReadyToSubmit}
         disabled={(readyToSubmit && title === "") || wordCount === 0}
+        escapeButtonRef={escapeButtonRef}
       />
     </div>
   );
@@ -143,6 +150,7 @@ function Footer({
   limit,
   setReadyToSubmit,
   disabled,
+  escapeButtonRef,
 }: {
   showSubmit: boolean;
   wordCount: number;
@@ -150,6 +158,7 @@ function Footer({
   onSubmit: () => void;
   setReadyToSubmit: (value: boolean) => void;
   disabled: boolean;
+  escapeButtonRef: Ref<HTMLButtonElement>;
 }) {
   const overLimit = wordCount > limit;
   return (
@@ -165,6 +174,7 @@ function Footer({
         onClick={() => (showSubmit ? onSubmit() : setReadyToSubmit(true))}
         className='disabled:text-gray-400'
         disabled={disabled || overLimit}
+        ref={escapeButtonRef}
       >
         {showSubmit ? "Submit" : "Next"}
       </button>

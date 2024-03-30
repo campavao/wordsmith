@@ -26,7 +26,7 @@ export default async function Round({
     return (
       <div className='flex flex-col justify-center items-center h-[90%] gap-8 '>
         <p className='text-red-500'>{message ?? "User not found"}</p>
-        <Link href='/'>Back</Link>
+        <Link href='/'>Back home</Link>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default async function Round({
     return (
       <div className='flex flex-col justify-center items-center h-[90%] gap-8 '>
         <p className='text-red-500'>League not found</p>
-        <Link href='/'>Back</Link>
+        <Link href='/'>Back home</Link>
       </div>
     );
   }
@@ -47,7 +47,7 @@ export default async function Round({
     return (
       <div className='flex flex-col justify-center items-center h-[90%] gap-8 '>
         <p className='text-red-500'>Round not found</p>
-        <Link href='/'>Back</Link>
+        <Link href='/'>Back home</Link>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export default async function Round({
           </>
         )}
         <div className='text-center p-1 mt-4'>
-          <Link href={`/league/${params.leagueId}`}>Back</Link>
+          <Link href={`/league/${params.leagueId}`}>Back to league</Link>
         </div>
       </div>
     </div>

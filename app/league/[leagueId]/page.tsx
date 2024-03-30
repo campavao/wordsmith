@@ -1,7 +1,5 @@
 "use server";
-import { authOptions } from "@/app/api/auth";
 import { LeagueId, Round } from "@/app/types/FriendLeague";
-import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { CopyLeagueId } from "../CopyLeagueId";
 import { getPlayer, getServerGame } from "@/app/api/apiUtils";
@@ -13,7 +11,7 @@ export default async function League({
 }: {
   params: { leagueId: string };
 }) {
-  const player = await getPlayer()
+  const player = await getPlayer();
 
   const {
     data: league,
@@ -78,10 +76,10 @@ export default async function League({
                 </li>
               ))}
             </ol>
-            {league.rounds.find(isInProgressOrComplete) && (
+            {league.rounds.find(isRoundStarted) && (
               <ol className='flex flex-col gap-4 w-full max-w-[700px] list-decimal'>
                 <p>Rounds</p>
-                {league.rounds.filter(isInProgressOrComplete).map((round) => (
+                {league.rounds.filter(isRoundStarted).map((round) => (
                   <li key={round.id}>
                     <RoundCard round={round} leagueId={params.leagueId} />
                   </li>
@@ -96,13 +94,13 @@ export default async function League({
           </Link>
         )}
       </Suspense>
-      <Link href='/'>Back</Link>
+      <Link href='/'>Back home</Link>
     </div>
   );
 }
 
-function isInProgressOrComplete(round: Round) {
-  return round.status === "in progress" || round.status === "completed";
+function isRoundStarted(round: Round) {
+  return round.status !== "not started";
 }
 
 function RoundCard({ round, leagueId }: { round: Round; leagueId: LeagueId }) {

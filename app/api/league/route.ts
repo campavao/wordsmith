@@ -4,7 +4,6 @@ import {
   Player,
   Round,
 } from "@/app/types/FriendLeague";
-import { DEFAULT_FRIEND_LEAGUE } from "../../types/FriendLeague";
 import { Prompt } from "@/app/friendLeague/CreateGame";
 import addData from "../firebase/addData";
 import getDoc from "../firebase/getData";
@@ -63,10 +62,10 @@ export async function POST(request: Request) {
 
   // create game
   const league: FriendLeague = {
-    ...DEFAULT_FRIEND_LEAGUE,
     leagueId: payload.leagueId,
     config: {
-      ...DEFAULT_FRIEND_LEAGUE.config,
+      numberOfDownvotes: payload.numberOfDownvotes,
+      numberOfUpvotes: payload.numberOfUpvotes,
       name: payload.leagueName,
       maxPlayers: payload.maxPlayers,
       creator: player,
