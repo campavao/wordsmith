@@ -1,5 +1,3 @@
-import { Session } from "next-auth";
-
 export interface Player {
   id: string;
   name: string;
@@ -65,18 +63,6 @@ export interface FriendLeague {
   rounds: Round[];
   config: LeagueConfiguration;
 }
-
-export const DEFAULT_FRIEND_LEAGUE: FriendLeague = {
-  leagueId: "1",
-  players: [],
-  rounds: [],
-  config: {
-    name: "Friend League",
-    maxPlayers: 8,
-    numberOfUpvotes: 2,
-    numberOfDownvotes: 1,
-  },
-};
 
 export const DEFAULT_ROUND: Round = {
   id: "",

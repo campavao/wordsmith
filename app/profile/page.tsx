@@ -16,7 +16,7 @@ export default async function Profile() {
       <h1 className='font-bold text-lg'>Author</h1>
       <div>Name: {session?.user?.name}</div>
       <div>Email: {session?.user?.email}</div>
-      <Link href='/'>Back</Link>
+      <Link href='/'>Back home</Link>
     </div>
   );
 }

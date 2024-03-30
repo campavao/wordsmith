@@ -46,7 +46,7 @@ export async function POST(
   { params }: { params: { roundId: string } }
 ) {
   // Your server-side logic here
-  const { player, submission, playerVote, leagueId } = await request.json();
+  const { playerId, submission, playerVote, leagueId } = await request.json();
   const { roundId } = params;
 
   try {
@@ -66,7 +66,7 @@ export async function POST(
       });
     }
     if (submission) {
-      if (round.submissions.find((sub) => sub.playerId === player.id)) {
+      if (round.submissions.find((sub) => sub.playerId === playerId)) {
         return Response.json({
           message: "already submitted",
           error: true,
@@ -76,9 +76,9 @@ export async function POST(
     }
 
     if (playerVote) {
-      if (round.votes.find((sub) => sub.playerId === player.id)) {
+      if (round.votes.find((sub) => sub.playerId === playerId)) {
         return Response.json({
-          message: "already votes",
+          message: "already voted",
           error: true,
         });
       }
@@ -95,8 +95,7 @@ export async function POST(
     await addData("games", leagueId, updatedLeague);
 
     return Response.json({
-      message: "creating with firebase game",
-      data: league,
+      message: "submission successful",
     });
   } catch (err) {
     throw new Error(err as string);

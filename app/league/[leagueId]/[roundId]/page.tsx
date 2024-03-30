@@ -1,16 +1,12 @@
-"use client";
-
+"use server";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
-
-import { useGame } from "@/app/hooks/useGame";
-import { WritingStep } from "./WritingStep";
-import { VotingStep } from "./VotingStep";
-import { ReviewStep } from "./ReviewStep";
-import { useMemo } from "react";
 import { Footnote } from "./components/Footnote";
+import { getPlayer, getServerGame } from "@/app/api/apiUtils";
+import { WritingStep } from "./WritingStepWrapper";
+import { VotingStep } from "./VotingStepWrapper";
+import { ReviewStep } from "./ReviewStepWrapper";
 
-export default function Round({
+export default async function Round({
   params,
 }: {
   params: {
@@ -18,25 +14,19 @@ export default function Round({
     roundId: string;
   };
 }) {
-  const { league, round, error, isLoading } = useGame(params);
-  const { data: session } = useSession();
+  const { leagueId, roundId } = params;
+  const user = await getPlayer();
+  const {
+    data: league,
+    error,
+    message,
+  } = await getServerGame({ leagueId, email: user.email });
 
-  const nextRoundId = useMemo(() => {
-    if (league?.rounds) {
-      const currentIndex = league.rounds.findIndex(
-        ({ id }) => id === params.roundId
-      );
-
-      if (currentIndex !== -1 && league.rounds.length > currentIndex + 1) {
-        return league.rounds[currentIndex + 1].id;
-      }
-    }
-  }, [league?.rounds, params.roundId]);
-
-  if (isLoading) {
+  if (error) {
     return (
-      <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
-        Loading...
+      <div className='flex flex-col justify-center items-center h-[90%] gap-8 '>
+        <p className='text-red-500'>{message ?? "User not found"}</p>
+        <Link href='/'>Back home</Link>
       </div>
     );
   }
@@ -45,28 +35,30 @@ export default function Round({
     return (
       <div className='flex flex-col justify-center items-center h-[90%] gap-8 '>
         <p className='text-red-500'>League not found</p>
-        <Link href='/'>Back</Link>
+        <Link href='/'>Back home</Link>
       </div>
     );
   }
 
-  if (!round) {
+  const { rounds } = league;
+  let roundIndex = rounds.findIndex((item) => item.id === roundId);
+
+  if (roundIndex === -1) {
     return (
       <div className='flex flex-col justify-center items-center h-[90%] gap-8 '>
         <p className='text-red-500'>Round not found</p>
-        <Link href='/'>Back</Link>
+        <Link href='/'>Back home</Link>
       </div>
     );
   }
 
-  if (error || !session) {
-    return (
-      <div className='flex flex-col justify-center items-center h-[90%] gap-8 '>
-        <p className='text-red-500'>{error ?? "User not found"}</p>
-        <Link href='/'>Back</Link>
-      </div>
-    );
+  let nextRoundId = undefined;
+
+  if (rounds.length > roundIndex + 1) {
+    nextRoundId = rounds[roundIndex + 1].id;
   }
+
+  const round = rounds[roundIndex];
 
   const isWriting =
     round?.status === "not started" || round?.status === "in progress";
@@ -77,23 +69,9 @@ export default function Round({
   return (
     <div className='flex flex-col items-center gap-12'>
       <h1 className='h1 font-bold text-lg'>{league.config.name}</h1>
-      <div className='max-w-lg w-screen'>
-        {isWriting && (
-          <WritingStep
-            {...params}
-            session={session}
-            round={round}
-            league={league}
-          />
-        )}
-        {isVoting && (
-          <VotingStep
-            {...params}
-            session={session}
-            round={round}
-            league={league}
-          />
-        )}
+      <div className='max-w-lg w-full'>
+        {isWriting && <WritingStep {...params} />}
+        {isVoting && <VotingStep {...params} />}
         {(isWriting || isVoting) && (
           <Footnote
             round={round}
@@ -104,12 +82,7 @@ export default function Round({
         )}
         {isCompleted && (
           <>
-            <ReviewStep
-              {...params}
-              session={session}
-              round={round}
-              league={league}
-            />
+            <ReviewStep {...params} />
             {nextRoundId && (
               <Link
                 className='block w-full text-center p-1'
@@ -121,7 +94,7 @@ export default function Round({
           </>
         )}
         <div className='text-center p-1 mt-4'>
-          <Link href={`/league/${params.leagueId}`}>Back</Link>
+          <Link href={`/league/${params.leagueId}`}>Back to league</Link>
         </div>
       </div>
     </div>

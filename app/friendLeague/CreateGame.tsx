@@ -6,12 +6,17 @@ import {
   FormEvent,
   MouseEvent,
   useRef,
+  useMemo,
 } from "react";
-import { CreateOrJoinGame } from "./page";
 import Image from "next/image";
-import { createGame, CreateGamePayload } from "../utils/leagueUtils";
+import {
+  createGame,
+  CreateGamePayload,
+  createLeagueId,
+} from "../utils/leagueUtils";
 import { DEFAULT_PROMPTS, isPlayer } from "../types/FriendLeague";
 import { useRouter } from "next/navigation";
+import { CreateOrJoinGame } from "./FriendLeagueClient";
 
 interface CreateGameForm {
   leagueName: { value: string };
@@ -20,9 +25,10 @@ interface CreateGameForm {
   prompts: HTMLInputElement[];
 }
 
-export function CreateGame({ session, cancel }: CreateOrJoinGame) {
+export function CreateGame({ player, cancel }: CreateOrJoinGame) {
   const router = useRouter();
   const imageRef = useRef<HTMLImageElement>(null);
+  const leagueId = useMemo(() => createLeagueId(5), []);
 
   const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -33,11 +39,16 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
       const prompts: HTMLInputElement[] =
         form.prompts.length != null
           ? Array.from(form.prompts)
-          : [form.prompts as unknown as HTMLInputElement];
+          : Array.isArray(form.prompts)
+          ? form.prompts
+          : [form.prompts];
 
       const payload: CreateGamePayload = {
+        leagueId,
         leagueName: form.leagueName.value,
         maxPlayers: form.maxPlayers.value,
+        numberOfUpvotes: form.numberOfUpvotes.value,
+        numberOfDownvotes: form.numberOfDownvotes.value,
         // picture: form.picture.files[0],
         prompts: prompts.map<Prompt>((item) => ({
           id: item.id,
@@ -46,15 +57,15 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
         })),
       };
 
-      if (session == null || !isPlayer(session.user)) {
-        console.error("User not found");
-        return;
+      const { error, message } = await createGame({ player, payload });
+
+      if (error) {
+        console.error(message);
       }
 
-      const { data } = await createGame({ player: session.user, payload });
-      router.push(`/league/${data.leagueId}`);
+      router.push(`/league/${leagueId}`);
     },
-    [router, session]
+    [leagueId, player, router]
   );
 
   const onImageUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +86,7 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
   }, []);
 
   return (
-    <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
+    <div className='flex flex-col justify-center items-center w-full h-[90%] gap-8'>
       Create game
       {/* <Image
         style={{ display: "none" }}
@@ -85,7 +96,7 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
         width={200}
         height={200}
       /> */}
-      <form className='flex flex-col w-[60%] gap-6' onSubmit={onSubmit}>
+      <form className='flex flex-col sm:w-[60%] gap-6' onSubmit={onSubmit}>
         <label className='flex place-content-between'>
           Name
           <input
@@ -101,11 +112,36 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
           <input
             name='maxPlayers'
             type='number'
-            className='border-b'
-            min={2}
+            className='border-b w-8'
+            min={3}
             max={8}
             required
             defaultValue={8}
+            aria-describedby='two-player-warning'
+          />
+        </label>
+        <label className='flex place-content-between'>
+          Required upvotes
+          <input
+            name='numberOfUpvotes'
+            type='number'
+            className='border-b w-8'
+            min={0}
+            max={8}
+            required
+            defaultValue={2}
+          />
+        </label>
+        <label className='flex place-content-between'>
+          Required downvotes
+          <input
+            name='numberOfDownvotes'
+            type='number'
+            className='border-b w-8'
+            min={0}
+            max={8}
+            required
+            defaultValue={1}
           />
         </label>
         {/* <label className='flex place-content-between'>
@@ -193,14 +229,14 @@ function PromptSetup() {
       Prompts
       {prompts.map((item, key) => (
         <div key={key}>
-          <label className='flex gap-4 w-full'>
+          <label className='flex flex-col sm:flex-row gap-4 w-full'>
             {key + 1}
             <textarea
               id={item.id}
               name='prompts'
               value={item.text}
               onChange={updatePrompt}
-              className='w-full border-b resize-none h-24'
+              className='w-full min-w-[200px] border-b resize-none h-24 rounded-lg'
               required
               autoFocus={key > 0}
               rows={2}
@@ -209,7 +245,7 @@ function PromptSetup() {
               placeholder={getPlaceholder(key)}
               data-limit={item.wordLimit}
             />
-            <div className='flex flex-col place-content-between w-28 p-1 border-b'>
+            <div className='flex self-center sm:self-auto sm:flex-col place-content-between w-full sm:w-28 p-1 border-b'>
               <label className='text-center'>
                 Word limit:
                 <input

@@ -1,82 +1,64 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useRef, Ref } from "react";
 import { Preview } from "./components/Preview";
 import { ReactQuill, writingModules } from "./components/Quill";
-import { addSubmission } from "@/app/utils/leagueUtils";
-import {
-  FriendLeague,
-  isPlayer,
-  Round,
-  Submission,
-} from "@/app/types/FriendLeague";
+import { v4 as uuid } from "uuid";
+
 import { Sources } from "quill";
 import { UnprivilegedEditor } from "react-quill";
-import { Session } from "next-auth";
-import { v4 as uuid } from "uuid";
+import { addSubmission } from "@/app/utils/leagueUtils";
 import { useRouter } from "next/navigation";
 
-export interface SharedStep {
-  roundId: string;
+interface WritingStepClient {
+  limit: number;
+  prompt: string;
+  isLastPlayer: boolean;
+  playerId: string;
   leagueId: string;
-  round: Round;
-  session: Session;
-  league: FriendLeague;
+  roundId: string;
+  foundText?: string;
+  foundTitle?: string;
 }
 
-export function WritingStep({
-  leagueId,
+export function WritingStepClient({
+  limit,
+  prompt,
+  playerId,
   roundId,
-  round,
-  session,
-  league,
-}: SharedStep) {
-  const router = useRouter();
+  leagueId,
+  isLastPlayer,
+  foundText,
+  foundTitle,
+}: WritingStepClient) {
   const [readyToSubmit, setReadyToSubmit] = useState<boolean>(false);
-  const [submission, setSubmission] = useState<Submission | undefined>();
-  const [words, setWords] = useState<string>("");
+  const [text, setText] = useState<string>(foundText ?? "");
   const [wordCount, setWordCount] = useState<number>(0);
-  const [title, setTitle] = useState<string>("");
-  const wordLimit = round?.wordLimit ?? 1000;
-  const prompt = round?.prompt;
+  const [title, setTitle] = useState<string>(foundTitle ?? "");
+  const [isDone, setIsDone] = useState<boolean>(!!foundText && !!foundTitle);
+  const escapeButtonRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
 
   const onSubmit = useCallback(async () => {
-    if (session && isPlayer(session.user)) {
-      try {
-        const id = uuid();
-        await addSubmission({
-          player: session.user,
-          roundId: roundId,
-          text: words,
-          title,
-          leagueId: leagueId,
-          id,
-        });
+    try {
+      const id = uuid();
+      await addSubmission({
+        playerId,
+        roundId,
+        text: text,
+        title,
+        leagueId,
+        id,
+      });
 
-        setSubmission({
-          roundId: roundId,
-          playerId: session.user.id,
-          text: words,
-          title,
-          id,
-        });
-        const isLastPlayer = league.players.length - round.votes.length <= 1;
-        if (isLastPlayer) {
-          router.refresh();
-        }
-      } catch (e: any) {
-        throw new Error(e);
+      setIsDone(true);
+
+      if (isLastPlayer) {
+        router.refresh();
       }
+    } catch (e: any) {
+      throw new Error(e);
     }
-  }, [
-    leagueId,
-    roundId,
-    session,
-    title,
-    words,
-    league.players.length,
-    round.votes.length,
-    router,
-  ]);
+  }, [playerId, roundId, text, title, leagueId, isLastPlayer, router]);
 
   const onTyping = useCallback(
     (
@@ -85,7 +67,7 @@ export function WritingStep({
       _source: Sources,
       editor: UnprivilegedEditor
     ) => {
-      setWords(text);
+      setText(text);
 
       const editorWordCount = editor
         .getText()
@@ -99,21 +81,7 @@ export function WritingStep({
     []
   );
 
-  useEffect(() => {
-    const player = session?.user;
-    if (!submission && isPlayer(player)) {
-      const foundSubmission = round?.submissions.find(
-        (item) => item.playerId === player.id && item.roundId === roundId
-      );
-      if (foundSubmission) {
-        setSubmission(foundSubmission);
-        setTitle(foundSubmission.title);
-        setWords(foundSubmission.text);
-      }
-    }
-  }, [roundId, submission, session?.user, round?.submissions]);
-
-  if (submission) {
+  if (isDone) {
     return (
       <div className='flex flex-col items-center'>
         {prompt && (
@@ -123,8 +91,8 @@ export function WritingStep({
         )}
         <div className='border-b w-10 my-5 self-center' />
 
-        <div className='flex flex-col max-w-lg w-screen'>
-          <Preview title={title} words={words} isEditable={false} />
+        <div className='flex flex-col max-w-lg w-full'>
+          <Preview title={title} words={text} isEditable={false} />
           <div className='border-b w-10 my-5 self-center' />
           <p className='text-center'>
             You have submitted. <br /> Waiting on everyone else to do the
@@ -152,18 +120,24 @@ export function WritingStep({
           placeholder='Compose your story'
           onChange={onTyping}
           modules={writingModules}
-          value={words}
+          value={text}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              escapeButtonRef.current?.focus();
+            }
+          }}
         />
       )}
-      {readyToSubmit && <Preview setTitle={setTitle} words={words} />}
+      {readyToSubmit && <Preview setTitle={setTitle} words={text} />}
       <div className='border-b w-10 my-5 self-center' />
       <Footer
         showSubmit={readyToSubmit}
         onSubmit={onSubmit}
         wordCount={wordCount}
-        limit={wordLimit}
+        limit={limit}
         setReadyToSubmit={setReadyToSubmit}
         disabled={(readyToSubmit && title === "") || wordCount === 0}
+        escapeButtonRef={escapeButtonRef}
       />
     </div>
   );
@@ -176,6 +150,7 @@ function Footer({
   limit,
   setReadyToSubmit,
   disabled,
+  escapeButtonRef,
 }: {
   showSubmit: boolean;
   wordCount: number;
@@ -183,13 +158,14 @@ function Footer({
   onSubmit: () => void;
   setReadyToSubmit: (value: boolean) => void;
   disabled: boolean;
+  escapeButtonRef: Ref<HTMLButtonElement>;
 }) {
   const overLimit = wordCount > limit;
   return (
     <div className='flex w-full justify-between'>
       {!showSubmit ? (
         <p className={`text-sm ${overLimit && "text-red-500"}`}>
-          Word count: {wordCount} {overLimit && `(${limit - wordCount})`}
+          Words left: {limit - wordCount}
         </p>
       ) : (
         <button onClick={() => setReadyToSubmit(false)}>Back</button>
@@ -198,6 +174,7 @@ function Footer({
         onClick={() => (showSubmit ? onSubmit() : setReadyToSubmit(true))}
         className='disabled:text-gray-400'
         disabled={disabled || overLimit}
+        ref={escapeButtonRef}
       >
         {showSubmit ? "Submit" : "Next"}
       </button>

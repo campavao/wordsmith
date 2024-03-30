@@ -1,72 +1,48 @@
 "use client";
-import {
-  isPlayer,
-  Submission,
-  VotedSubmission,
-} from "@/app/types/FriendLeague";
+import { Submission, VotedSubmission } from "@/app/types/FriendLeague";
 import { Preview } from "./components/Preview";
-import { SharedStep } from "./WritingStep";
-import { useState, useEffect, useMemo, useCallback, ChangeEvent } from "react";
+import { useState, useMemo, useCallback, ChangeEvent } from "react";
 import { addVotes } from "@/app/utils/leagueUtils";
 import { useRouter } from "next/navigation";
+import Error from "../error";
 
-export function VotingStep({
+interface VotingStepClient {
+  isDone: boolean;
+  availableSubmissions: Submission[];
+  submittedVotes?: VotedSubmission[];
+  numberOfDownvotes: number;
+  numberOfUpvotes: number;
+  isTwoPlayer: boolean;
+  prompt: string;
+  isLastPlayer: boolean;
+  playerId: string;
+  leagueId: string;
+  roundId: string;
+}
+
+export function VotingStepClient({
+  availableSubmissions,
+  isDone: isDoneFromServer,
+  submittedVotes,
+  numberOfDownvotes,
+  numberOfUpvotes,
+  isTwoPlayer,
+  prompt,
+  isLastPlayer,
+  playerId,
   roundId,
   leagueId,
-  round,
-  session,
-  league,
-}: SharedStep) {
+}: VotingStepClient) {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const playerId = session.user.id;
-  const [error, setError] = useState<string>("");
-  const [isDone, setIsDone] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [downvotes, setDownvotes] = useState<number>(0);
   const [upvotes, setUpvotes] = useState<number>(0);
+  const [isDone, setIsDone] = useState<boolean>(isDoneFromServer);
+  const [message, setMessage] = useState<string>("");
   const router = useRouter();
 
-  const availableSubmissions = useMemo(() => {
-    // remove current player from voting for themselves
-    const filteredSubmissions = round.submissions.filter(
-      (item) => item.playerId !== playerId
-    );
-
-    // shuffle list so you don't know the order
-    return shuffle(filteredSubmissions ?? []);
-  }, [playerId, round.submissions]);
-
   const [votes, setVotes] = useState<VotedSubmission[]>(
-    getVotes(availableSubmissions)
+    submittedVotes ?? getVotes(availableSubmissions)
   );
-
-  useEffect(() => {
-    if (!isLoaded && availableSubmissions) {
-      setIsLoaded(true);
-      const roundVotes = round.votes.find((vote) => vote.playerId === playerId);
-      const votedSubmissions = (roundVotes?.submissions ?? []).map(
-        (item) => item.submissionId
-      );
-      const submissionIndex = availableSubmissions.findIndex(
-        (item) => !votedSubmissions.includes(item.id)
-      );
-
-      if (submissionIndex !== -1) {
-        setCurrentIndex(submissionIndex);
-      } else {
-        const previousVotes = roundVotes?.submissions ?? votes;
-        setVotes(previousVotes);
-        setIsDone(true);
-      }
-    }
-  }, [
-    availableSubmissions,
-    playerId,
-    round.votes,
-    league.config,
-    votes,
-    isLoaded,
-  ]);
 
   const submission = useMemo(
     () => availableSubmissions.at(currentIndex),
@@ -112,36 +88,23 @@ export function VotingStep({
   );
 
   const onSubmit = useCallback(async () => {
-    if (isPlayer(session.user)) {
-      const { message, error } = await addVotes({
-        player: session.user,
-        roundId,
-        leagueId,
-        votedSubmissions: votes,
-      });
+    const { message, error } = await addVotes({
+      playerId,
+      roundId,
+      leagueId,
+      votedSubmissions: votes,
+    });
 
-      if (error) {
-        setError(message);
-      }
-
-      setIsDone(true);
-
-      const isLastPlayer = league.players.length - round.votes.length <= 1;
-      if (isLastPlayer) {
-        router.refresh();
-      }
+    if (error) {
+      setMessage(message);
     }
-  }, [
-    session.user,
-    votes,
-    roundId,
-    leagueId,
-    router,
-    league,
-    round.votes.length,
-  ]);
 
-  const { numberOfDownvotes, numberOfUpvotes } = league.config;
+    setIsDone(true);
+
+    if (isLastPlayer) {
+      router.refresh();
+    }
+  }, [isLastPlayer, leagueId, playerId, roundId, router, votes]);
 
   const remainingDownvotes = numberOfDownvotes - downvotes;
   const remainingUpvotes = numberOfUpvotes - upvotes;
@@ -157,35 +120,25 @@ export function VotingStep({
     [remainingDownvotes, remainingUpvotes, numberOfDownvotes, numberOfUpvotes]
   );
 
-  const currentVote = useMemo(() => {
-    // weird and stupid, remove this when converting to SSR
-    if (isDone && submission) {
-      const foundVote = votes.find((i) => i.submissionId === submission.id);
-      if (foundVote) {
-        return foundVote;
-      }
-    }
-    return votes[currentIndex];
-  }, [currentIndex, isDone, submission, votes]);
+  const currentVote = votes[currentIndex];
 
   if (!submission) {
     return <div>Loading...</div>;
   }
 
-  const isSubmittable =
-    round.submissions.length <= 2 ? isTwoPlayerValid : isValid;
+  const isSubmittable = isTwoPlayer ? isTwoPlayerValid : isValid;
 
   return (
     <div className='flex flex-col items-center'>
       <blockquote className='max-w-lg p-5'>
-        <p>{round.prompt}</p>
+        <p>{prompt}</p>
       </blockquote>
-      {(league == null || error) && (
-        <p className='text-red-500'>{error ?? "Game not found"}</p>
-      )}
+
+      {message && <Error message={message} />}
+
       <div className='border-b w-10 my-5 self-center' />
 
-      <div className='flex flex-col max-w-lg w-screen'>
+      <div className='flex flex-col max-w-lg w-full'>
         <Preview
           title={submission.title}
           words={submission.text}
@@ -205,10 +158,18 @@ export function VotingStep({
           </div>
           {!isDone && (
             <div className='flex gap-4 justify-between w-full'>
-              <span className={`${remainingDownvotes < 0 && "text-red-500"}`}>
+              <span
+                className={`${
+                  remainingDownvotes < 0 && "text-red-500"
+                } text-center sm:text-left`}
+              >
                 Available downvotes: {remainingDownvotes}
               </span>
-              <span className={`${remainingUpvotes < 0 && "text-red-500"}`}>
+              <span
+                className={`${
+                  remainingUpvotes < 0 && "text-red-500"
+                } text-center sm:text-left`}
+              >
                 Available upvotes: {remainingUpvotes}
               </span>
             </div>
@@ -233,7 +194,7 @@ export function VotingStep({
             Comments
             <textarea
               onChange={onCommentChange}
-              className='w-full border-2 px-2 text-sm resize-none min-h-[100px]'
+              className='w-full min-w-[200px] border-2 px-2 text-sm resize-none min-h-[100px] rounded-lg'
               maxLength={500}
               value={currentVote.comment}
               disabled={isDone}
@@ -268,13 +229,4 @@ function getVotes(submissions: Submission[]): VotedSubmission[] {
     score: 0,
     comment: "",
   }));
-}
-
-// declare the function
-function shuffle<T extends object>(array: T[]): T[] {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
 }

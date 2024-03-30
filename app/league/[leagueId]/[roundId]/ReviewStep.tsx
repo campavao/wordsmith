@@ -1,57 +1,35 @@
-import { useEffect, useMemo, useState } from "react";
-import { SharedStep } from "./WritingStep";
+"use client";
+import { useState } from "react";
 import { Preview } from "./components/Preview";
+
 import {
-  FriendLeague,
-  Round,
-  Submission,
-  VotedSubmission,
-} from "@/app/types/FriendLeague";
+  Comment,
+  ReviewSubmissionWithRank,
+} from "./ReviewStepWrapper";
 
-type ReviewVotedSubmission = VotedSubmission & { playerId: string };
-
-interface ReviewSubmission extends Submission {
-  totalScore: number;
-  votes: ReviewVotedSubmission[];
+interface ReviewStepClient {
+  reviewSubmissions: ReviewSubmissionWithRank[];
 }
 
-export function ReviewStep({ round, league }: SharedStep) {
+export function ReviewStepClient({ reviewSubmissions }: ReviewStepClient) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [reviewSubmissions, setReviewSubmissions] = useState<
-    ReviewSubmission[]
-  >([]);
 
-  useEffect(() => {
-    if (reviewSubmissions.length === 0) {
-      const reviewedSubmissions = getReviewedSubmissions(round);
-      const sortedSubmissions = reviewedSubmissions.sort(
-        (a, b) => b.totalScore - a.totalScore
-      );
-      setReviewSubmissions(sortedSubmissions);
-    }
-  }, [reviewSubmissions.length, round]);
-
-  const comments = useMemo(
-    () => getComments(reviewSubmissions[currentIndex], league),
-    [currentIndex, league, reviewSubmissions]
-    );
-
-    const authorName = useMemo(() => league.players.find(player => player.id === reviewSubmissions[currentIndex]?.playerId)?.name, [league, reviewSubmissions, currentIndex])
+  const submission = reviewSubmissions[currentIndex];
 
   return (
     <div>
       <strong className='flex justify-between'>
-        <span>#{currentIndex + 1}</span>
-        <span>Total: {reviewSubmissions[currentIndex]?.totalScore}</span>
+        <span>#{submission.rank}</span>
+        <span>Total: {submission.totalScore}</span>
       </strong>
       <Preview
-        words={reviewSubmissions[currentIndex]?.text}
-        title={reviewSubmissions[currentIndex]?.title}
-        authorName={authorName}
+        words={submission.text}
+        title={submission.title}
+        authorName={submission.authorName}
         isEditable={false}
       />
-      {comments.map((comment, key) => (
-        <Comment comment={comment} key={key} />
+      {submission.comments.map((comment, key) => (
+        <CommentDisplay comment={comment} key={key} />
       ))}
       <div className='flex justify-between w-full mb-10'>
         <button
@@ -73,46 +51,7 @@ export function ReviewStep({ round, league }: SharedStep) {
   );
 }
 
-function getReviewedSubmissions(round: Round): ReviewSubmission[] {
-  return round.submissions.map((submission) => {
-    const isRightSubmission = ({ submissionId }: VotedSubmission) =>
-      submissionId === submission.id;
-
-    const votes = round.votes
-      .filter((vote) => vote.submissions.find(isRightSubmission))
-      .map((vote) => ({
-        ...vote.submissions.find(isRightSubmission)!,
-        playerId: vote.playerId,
-      }));
-
-    const totalScore = votes.reduce((acc, curr) => acc + (curr?.score ?? 0), 0);
-
-    return {
-      ...submission,
-      votes,
-      totalScore,
-    };
-  });
-}
-
-type Comment = ReviewVotedSubmission & { name: string };
-
-function getComments(
-  submission: ReviewSubmission,
-  league: FriendLeague
-): Comment[] {
-  return (
-    submission?.votes?.map((vote) => {
-      const player = league.players.find((p) => p.id === vote.playerId);
-      return {
-        name: player?.name ?? "Unknown",
-        ...vote,
-      };
-    }) ?? []
-  );
-}
-
-function Comment({ comment }: { comment: Comment }) {
+function CommentDisplay({ comment }: { comment: Comment }) {
   return (
     <div className='w-full my-4'>
       <div className='flex justify-between'>
