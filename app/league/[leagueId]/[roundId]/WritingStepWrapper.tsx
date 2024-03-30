@@ -1,13 +1,6 @@
 "use server"
-import {
-  updateRoundForUser,
-  getPlayer,
-  getServerGame,
-} from "@/app/api/apiUtils";
-import { Submission } from "@/app/types/FriendLeague";
-import { v4 as uuid } from "uuid";
+import { getPlayer, getServerGame } from "@/app/api/apiUtils";
 import { WritingStepClient } from "./WritingStep";
-import { redirect } from "next/navigation";
 
 export interface SharedStep {
   roundId: string;
@@ -36,30 +29,7 @@ export async function WritingStep({ leagueId, roundId }: SharedStep) {
     return <div>No round found</div>;
   }
 
-  const onSubmit = async (text: string, title: string) => {
-    const id = uuid();
-    const submission: Submission = {
-      playerId: player.id,
-      roundId,
-      text,
-      title,
-      id,
-    };
-
-    await updateRoundForUser({
-      player,
-      roundId,
-      leagueId,
-      submission,
-    });
-
-    const isLastPlayer = league.players.length - round.votes.length <= 1;
-    if (isLastPlayer) {
-      // Hack to reload the page server-side
-      redirect(`/league/${leagueId}/${roundId}`);
-    }
-  };
-
+  const isLastPlayer = league.players.length - round.submissions.length <= 1;
   const limit = round.wordLimit;
   const prompt = round.prompt;
 
@@ -70,10 +40,13 @@ export async function WritingStep({ leagueId, roundId }: SharedStep) {
   return (
     <WritingStepClient
       limit={limit}
-      onWritingSubmit={onSubmit}
       prompt={prompt}
       foundText={activeSubmission?.text}
       foundTitle={activeSubmission?.title}
+      playerId={player.id}
+      leagueId={leagueId}
+      roundId={round.id}
+      isLastPlayer={isLastPlayer}
     />
   );
 }

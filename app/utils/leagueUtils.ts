@@ -68,14 +68,14 @@ export async function createGame({ player, payload }: CreateGame) {
 interface AddSubmission {
   title: string;
   roundId: string;
-  player: Player;
+  playerId: string;
   text: string;
   leagueId: string;
   id: string;
 }
 
 export async function addSubmission({
-  player,
+  playerId,
   text,
   title,
   roundId,
@@ -83,7 +83,7 @@ export async function addSubmission({
   id,
 }: AddSubmission) {
   const submission: Submission = {
-    playerId: player.id,
+    playerId,
     roundId,
     text,
     title,
@@ -92,7 +92,7 @@ export async function addSubmission({
 
   const response = await fetch(`/api/league/${roundId}`, {
     method: "POST",
-    body: JSON.stringify({ player, submission, leagueId }),
+    body: JSON.stringify({ playerId, submission, leagueId }),
   });
 
   return response.json();
@@ -100,25 +100,25 @@ export async function addSubmission({
 
 interface AddVotes {
   roundId: string;
-  player: Player;
+  playerId: string;
   leagueId: string;
   votedSubmissions: VotedSubmission[];
 }
 
 export async function addVotes({
-  player,
+  playerId,
   roundId,
   leagueId,
   votedSubmissions,
 }: AddVotes) {
   const playerVote: PlayerVote = {
-    playerId: player.id,
+    playerId,
     submissions: votedSubmissions,
   };
 
   const response = await fetch(`/api/league/${roundId}`, {
     method: "POST",
-    body: JSON.stringify({ player, playerVote, leagueId }),
+    body: JSON.stringify({ playerId, playerVote, leagueId }),
   });
 
   return response.json();

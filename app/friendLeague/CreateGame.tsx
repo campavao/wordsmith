@@ -7,11 +7,11 @@ import {
   MouseEvent,
   useRef,
 } from "react";
-import { CreateOrJoinGame } from "./page";
 import Image from "next/image";
 import { createGame, CreateGamePayload } from "../utils/leagueUtils";
 import { DEFAULT_PROMPTS, isPlayer } from "../types/FriendLeague";
 import { useRouter } from "next/navigation";
+import { CreateOrJoinGame } from "./FriendLeagueClient";
 
 interface CreateGameForm {
   leagueName: { value: string };
@@ -20,7 +20,7 @@ interface CreateGameForm {
   prompts: HTMLInputElement[];
 }
 
-export function CreateGame({ session, cancel }: CreateOrJoinGame) {
+export function CreateGame({ player, cancel }: CreateOrJoinGame) {
   const router = useRouter();
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -33,7 +33,9 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
       const prompts: HTMLInputElement[] =
         form.prompts.length != null
           ? Array.from(form.prompts)
-          : [form.prompts as unknown as HTMLInputElement];
+          : Array.isArray(form.prompts)
+          ? form.prompts
+          : [form.prompts];
 
       const payload: CreateGamePayload = {
         leagueName: form.leagueName.value,
@@ -46,15 +48,10 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
         })),
       };
 
-      if (session == null || !isPlayer(session.user)) {
-        console.error("User not found");
-        return;
-      }
-
-      const { data } = await createGame({ player: session.user, payload });
+      const { data } = await createGame({ player, payload });
       router.push(`/league/${data.leagueId}`);
     },
-    [router, session]
+    [router, player]
   );
 
   const onImageUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +72,7 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
   }, []);
 
   return (
-    <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
+    <div className='flex flex-col justify-center items-center w-full h-[90%] gap-8'>
       Create game
       {/* <Image
         style={{ display: "none" }}
@@ -85,7 +82,7 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
         width={200}
         height={200}
       /> */}
-      <form className='flex flex-col w-[60%] gap-6' onSubmit={onSubmit}>
+      <form className='flex flex-col sm:w-[60%] gap-6' onSubmit={onSubmit}>
         <label className='flex place-content-between'>
           Name
           <input
@@ -101,7 +98,7 @@ export function CreateGame({ session, cancel }: CreateOrJoinGame) {
           <input
             name='maxPlayers'
             type='number'
-            className='border-b'
+            className='border-b w-8'
             min={2}
             max={8}
             required
@@ -193,14 +190,14 @@ function PromptSetup() {
       Prompts
       {prompts.map((item, key) => (
         <div key={key}>
-          <label className='flex gap-4 w-full'>
+          <label className='flex flex-col sm:flex-row gap-4 w-full'>
             {key + 1}
             <textarea
               id={item.id}
               name='prompts'
               value={item.text}
               onChange={updatePrompt}
-              className='w-full border-b resize-none h-24'
+              className='w-full min-w-[200px] border-b resize-none h-24 rounded-lg'
               required
               autoFocus={key > 0}
               rows={2}
@@ -209,7 +206,7 @@ function PromptSetup() {
               placeholder={getPlaceholder(key)}
               data-limit={item.wordLimit}
             />
-            <div className='flex flex-col place-content-between w-28 p-1 border-b'>
+            <div className='flex self-center sm:self-auto sm:flex-col place-content-between w-full sm:w-28 p-1 border-b'>
               <label className='text-center'>
                 Word limit:
                 <input

@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { Footnote } from "./components/Footnote";
 import { getPlayer, getServerGame } from "@/app/api/apiUtils";
-import { ReviewStep } from "./ReviewStep";
 import { WritingStep } from "./WritingStepWrapper";
 import { VotingStep } from "./VotingStepWrapper";
+import { ReviewStep } from "./ReviewStepWrapper";
 
 export default async function Round({
   params,
@@ -69,7 +69,7 @@ export default async function Round({
   return (
     <div className='flex flex-col items-center gap-12'>
       <h1 className='h1 font-bold text-lg'>{league.config.name}</h1>
-      <div className='max-w-lg w-screen'>
+      <div className='max-w-lg w-full'>
         {isWriting && <WritingStep {...params} />}
         {isVoting && <VotingStep {...params} />}
         {(isWriting || isVoting) && (
@@ -82,7 +82,7 @@ export default async function Round({
         )}
         {isCompleted && (
           <>
-            {/* <ReviewStep {...params} round={round} league={league} /> */}
+            <ReviewStep {...params} />
             {nextRoundId && (
               <Link
                 className='block w-full text-center p-1'

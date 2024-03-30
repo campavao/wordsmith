@@ -66,7 +66,7 @@ export default function Book() {
           <p>{prompt}</p>
         </blockquote>
       )}
-      <div className='max-w-lg w-screen'>
+      <div className='max-w-lg w-full'>
         <div className='border my-5' />
         {/* Tried to do just one or a conditional, but changing modules is bad I guess and will break the content */}
         {!readyToSubmit && (

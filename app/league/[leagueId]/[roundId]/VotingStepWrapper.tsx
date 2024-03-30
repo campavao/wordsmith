@@ -1,14 +1,8 @@
 "use server";
-import {
-  updateRoundForUser,
-  getPlayer,
-  getServerGame,
-} from "@/app/api/apiUtils";
+import { getPlayer, getServerGame } from "@/app/api/apiUtils";
 import { SharedStep } from "./WritingStepWrapper";
 import { VotingStepClient } from "./VotingStep";
 import Error from "../error";
-import { PlayerVote, VotedSubmission } from "@/app/types/FriendLeague";
-import { redirect } from "next/navigation";
 
 export async function VotingStep({ roundId, leagueId }: SharedStep) {
   const player = await getPlayer();
@@ -32,47 +26,39 @@ export async function VotingStep({ roundId, leagueId }: SharedStep) {
     return <Error message='No round found' />;
   }
 
-  const onSubmit = async (votes: VotedSubmission[]) => {
-    const playerVote: PlayerVote = {
-      playerId: player.id,
-      submissions: votes,
-    };
+  const submissions = round.submissions.filter((s) => s.playerId !== player.id);
 
-    const response = await updateRoundForUser({
-      player,
-      playerVote,
-      leagueId,
-      roundId,
-    });
-
-    if (response.error) {
-      console.error(response.message);
-      return;
-    }
-
-    redirect(`/league/${leagueId}/${roundId}`);
-  };
-
-  const availableSubmissions = round.submissions.filter(
-    (s) => s.playerId !== player.id
-  );
+  const availableSubmissions = shuffle(submissions);
 
   const playerVotes = round.votes.find((v) => v.playerId === player.id);
 
   const { numberOfDownvotes, numberOfUpvotes } = league.config;
 
   const isTwoPlayer = round.submissions.length <= 2;
+  const isLastPlayer = league.players.length - round.votes.length <= 1;
 
   return (
     <VotingStepClient
       isDone={playerVotes != null}
       isTwoPlayer={isTwoPlayer}
-      onSubmit={onSubmit}
       availableSubmissions={availableSubmissions}
       submittedVotes={playerVotes?.submissions}
       prompt={round.prompt}
       numberOfDownvotes={numberOfDownvotes}
       numberOfUpvotes={numberOfUpvotes}
+      playerId={player.id}
+      leagueId={leagueId}
+      roundId={round.id}
+      isLastPlayer={isLastPlayer}
     />
   );
+}
+
+// declare the function
+function shuffle<T extends object>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }

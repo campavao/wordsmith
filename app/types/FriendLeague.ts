@@ -1,5 +1,3 @@
-import { Session } from "next-auth";
-
 export interface Player {
   id: string;
   name: string;

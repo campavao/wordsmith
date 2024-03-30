@@ -2,31 +2,43 @@
 import { Submission, VotedSubmission } from "@/app/types/FriendLeague";
 import { Preview } from "./components/Preview";
 import { useState, useMemo, useCallback, ChangeEvent } from "react";
+import { addVotes } from "@/app/utils/leagueUtils";
+import { useRouter } from "next/navigation";
+import Error from "../error";
 
 interface VotingStepClient {
   isDone: boolean;
-  onSubmit: (props: any) => Promise<void>;
   availableSubmissions: Submission[];
   submittedVotes?: VotedSubmission[];
   numberOfDownvotes: number;
   numberOfUpvotes: number;
   isTwoPlayer: boolean;
   prompt: string;
+  isLastPlayer: boolean;
+  playerId: string;
+  leagueId: string;
+  roundId: string;
 }
 
 export function VotingStepClient({
-  onSubmit,
   availableSubmissions,
-  isDone,
+  isDone: isDoneFromServer,
   submittedVotes,
   numberOfDownvotes,
   numberOfUpvotes,
   isTwoPlayer,
   prompt,
+  isLastPlayer,
+  playerId,
+  roundId,
+  leagueId,
 }: VotingStepClient) {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [downvotes, setDownvotes] = useState<number>(0);
   const [upvotes, setUpvotes] = useState<number>(0);
+  const [isDone, setIsDone] = useState<boolean>(isDoneFromServer);
+  const [message, setMessage] = useState<string>("");
+  const router = useRouter();
 
   const [votes, setVotes] = useState<VotedSubmission[]>(
     submittedVotes ?? getVotes(availableSubmissions)
@@ -75,9 +87,24 @@ export function VotingStepClient({
     [currentIndex]
   );
 
-  const onClientSubmit = useCallback(async () => {
-    await onSubmit(votes);
-``  }, [onSubmit, votes]);
+  const onSubmit = useCallback(async () => {
+    const { message, error } = await addVotes({
+      playerId,
+      roundId,
+      leagueId,
+      votedSubmissions: votes,
+    });
+
+    if (error) {
+      setMessage(message);
+    }
+
+    setIsDone(true);
+
+    if (isLastPlayer) {
+      router.refresh();
+    }
+  }, [isLastPlayer, leagueId, playerId, roundId, router, votes]);
 
   const remainingDownvotes = numberOfDownvotes - downvotes;
   const remainingUpvotes = numberOfUpvotes - upvotes;
@@ -105,9 +132,11 @@ export function VotingStepClient({
         <p>{prompt}</p>
       </blockquote>
 
+      {message && <Error message={message} />}
+
       <div className='border-b w-10 my-5 self-center' />
 
-      <div className='flex flex-col max-w-lg w-screen'>
+      <div className='flex flex-col max-w-lg w-full'>
         <Preview
           title={submission.title}
           words={submission.text}
@@ -155,7 +184,7 @@ export function VotingStepClient({
             Comments
             <textarea
               onChange={onCommentChange}
-              className='w-full border-2 px-2 text-sm resize-none min-h-[100px]'
+              className='w-full min-w-[200px] border-2 px-2 text-sm resize-none min-h-[100px] rounded-lg'
               maxLength={500}
               value={votes[currentIndex].comment}
               disabled={isDone}
@@ -166,7 +195,7 @@ export function VotingStepClient({
               <button
                 className='disabled:text-transparent'
                 disabled={!isSubmittable}
-                onClick={onClientSubmit}
+                onClick={onSubmit}
               >
                 Submit
               </button>

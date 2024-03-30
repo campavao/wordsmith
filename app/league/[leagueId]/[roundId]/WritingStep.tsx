@@ -2,14 +2,20 @@
 import { useState, useCallback } from "react";
 import { Preview } from "./components/Preview";
 import { ReactQuill, writingModules } from "./components/Quill";
+import { v4 as uuid } from "uuid";
 
 import { Sources } from "quill";
 import { UnprivilegedEditor } from "react-quill";
+import { addSubmission } from "@/app/utils/leagueUtils";
+import { useRouter } from "next/navigation";
 
 interface WritingStepClient {
   limit: number;
-  onWritingSubmit: (text: string, title: string) => Promise<void>;
   prompt: string;
+  isLastPlayer: boolean;
+  playerId: string;
+  leagueId: string;
+  roundId: string;
   foundText?: string;
   foundTitle?: string;
 }
@@ -17,18 +23,41 @@ interface WritingStepClient {
 export function WritingStepClient({
   limit,
   prompt,
-  onWritingSubmit,
+  playerId,
+  roundId,
+  leagueId,
+  isLastPlayer,
   foundText,
   foundTitle,
 }: WritingStepClient) {
   const [readyToSubmit, setReadyToSubmit] = useState<boolean>(false);
-  const [words, setWords] = useState<string>(foundText ?? "");
+  const [text, setText] = useState<string>(foundText ?? "");
   const [wordCount, setWordCount] = useState<number>(0);
   const [title, setTitle] = useState<string>(foundTitle ?? "");
+  const [isDone, setIsDone] = useState<boolean>(!!foundText && !!foundTitle);
+  const router = useRouter();
 
-  const onClientSubmit = useCallback(async () => {
-    await onWritingSubmit(words, title);
-  }, [onWritingSubmit, words, title]);
+  const onSubmit = useCallback(async () => {
+    try {
+      const id = uuid();
+      await addSubmission({
+        playerId,
+        roundId,
+        text: text,
+        title,
+        leagueId,
+        id,
+      });
+
+      setIsDone(true);
+
+      if (isLastPlayer) {
+        router.refresh();
+      }
+    } catch (e: any) {
+      throw new Error(e);
+    }
+  }, [playerId, roundId, text, title, leagueId, isLastPlayer, router]);
 
   const onTyping = useCallback(
     (
@@ -37,7 +66,7 @@ export function WritingStepClient({
       _source: Sources,
       editor: UnprivilegedEditor
     ) => {
-      setWords(text);
+      setText(text);
 
       const editorWordCount = editor
         .getText()
@@ -51,7 +80,7 @@ export function WritingStepClient({
     []
   );
 
-  if (foundText && foundTitle) {
+  if (isDone) {
     return (
       <div className='flex flex-col items-center'>
         {prompt && (
@@ -61,8 +90,8 @@ export function WritingStepClient({
         )}
         <div className='border-b w-10 my-5 self-center' />
 
-        <div className='flex flex-col max-w-lg w-screen'>
-          <Preview title={title} words={words} isEditable={false} />
+        <div className='flex flex-col max-w-lg w-full'>
+          <Preview title={title} words={text} isEditable={false} />
           <div className='border-b w-10 my-5 self-center' />
           <p className='text-center'>
             You have submitted. <br /> Waiting on everyone else to do the
@@ -90,14 +119,14 @@ export function WritingStepClient({
           placeholder='Compose your story'
           onChange={onTyping}
           modules={writingModules}
-          value={words}
+          value={text}
         />
       )}
-      {readyToSubmit && <Preview setTitle={setTitle} words={words} />}
+      {readyToSubmit && <Preview setTitle={setTitle} words={text} />}
       <div className='border-b w-10 my-5 self-center' />
       <Footer
         showSubmit={readyToSubmit}
-        onSubmit={onClientSubmit}
+        onSubmit={onSubmit}
         wordCount={wordCount}
         limit={limit}
         setReadyToSubmit={setReadyToSubmit}
@@ -127,7 +156,7 @@ function Footer({
     <div className='flex w-full justify-between'>
       {!showSubmit ? (
         <p className={`text-sm ${overLimit && "text-red-500"}`}>
-          Word count: {wordCount} {overLimit && `(${limit - wordCount})`}
+          Words left: {limit - wordCount}
         </p>
       ) : (
         <button onClick={() => setReadyToSubmit(false)}>Back</button>
