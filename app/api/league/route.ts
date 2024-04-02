@@ -8,14 +8,15 @@ import { Prompt } from "@/app/friendLeague/CreateGame";
 import addData from "../firebase/addData";
 import getDoc from "../firebase/getData";
 import { addToArray } from "../firebase/updateData";
+import { getPlayer } from "../apiUtils";
 
 // Get game
 export async function GET(request: Request) {
   // Your server-side logic here
   console.log("getting league");
   const { searchParams } = new URL(request.url);
+  const player = await getPlayer();
   const leagueId = searchParams.get("leagueId");
-  const email = searchParams.get("playerEmail");
 
   if (leagueId == null) {
     return Response.json({ message: "no league id", error: true });
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
     return Response.json({ message: "league id isn't valid", error: true });
   }
 
-  if (!game.players.find((player) => player.email === email)) {
+  if (!game.players.find((currPlayer) => currPlayer.email === player.email)) {
     return Response.json({ message: "not apart of game", error: true });
   }
 
@@ -52,7 +53,8 @@ export async function GET(request: Request) {
 // Create game
 export async function POST(request: Request) {
   // Your server-side logic here
-  const { player, payload } = await request.json();
+  const { payload } = await request.json();
+  const player = await getPlayer();
 
   const document = await getDoc("games", payload.leagueId);
 
@@ -95,8 +97,8 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   // Your server-side logic here
   const data = await request.json();
+  const player = await getPlayer();
 
-  const player: Player = data.player;
   // if specified but no game found, errors
   const leagueId = data.leagueId;
 
@@ -131,13 +133,6 @@ export async function PUT(request: Request) {
         error: true,
       });
     }
-
-    const players = [...game.players, player];
-
-    const updatedGame = {
-      ...game,
-      players,
-    };
 
     // add to game
     await addToArray("games", leagueId, "players", player);

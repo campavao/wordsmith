@@ -7,34 +7,29 @@ import {
   VotedSubmission,
 } from "../types/FriendLeague";
 import { Prompt } from "../friendLeague/CreateGame";
-import { Session } from "next-auth";
 
-export async function getGame({ player, leagueId }: JoinGame) {
-  if (!player || !leagueId) {
+export async function getGame({ leagueId }: JoinGame) {
+  if (!leagueId) {
     throw new Error("No player or leagueId supplied");
   }
-  const response = await fetch(
-    `/api/league?leagueId=${leagueId}&playerEmail=${player.email}`,
-    {
-      method: "GET",
-    }
-  );
+  const response = await fetch(`/api/league?leagueId=${leagueId}`, {
+    method: "GET",
+  });
 
   return response.json();
 }
 
 interface JoinGame {
-  player: Session["user"] | Player; // sometimes the session doesn't have an id
   leagueId: LeagueId;
 }
 
-export async function joinGame({ player, leagueId }: JoinGame) {
-  if (!player || !leagueId) {
+export async function joinGame({ leagueId }: JoinGame) {
+  if (!leagueId) {
     throw new Error("No player or leagueId supplied");
   }
   const response = await fetch(`/api/league`, {
     method: "PUT",
-    body: JSON.stringify({ player, leagueId }),
+    body: JSON.stringify({ leagueId }),
   });
 
   return response.json();
