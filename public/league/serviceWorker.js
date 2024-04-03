@@ -37,5 +37,5 @@ self.addEventListener("activate", async (e) => {
 });
 
 self.addEventListener("push", (e) => {
-  self.registration.showNotification({ body: e.data.text() });
+  self.registration.showNotification("Wordsmith", { body: e.data.text() });
 });
