@@ -137,7 +137,7 @@ async function sendRoundChangeNotifications(
   status: RoundStatus
 ) {
   const listWithoutCurrPlayer = league.players.filter((p) => p.id !== playerId);
-  let message;
+  let message: string | undefined;
 
   switch (status) {
     case "voting":
@@ -153,7 +153,7 @@ async function sendRoundChangeNotifications(
   }
 
   await Promise.all(
-    listWithoutCurrPlayer.map((player) => sendNotification(player.id, message))
+    listWithoutCurrPlayer.map((player) => sendNotification(player.id, message!))
   );
 }
 
