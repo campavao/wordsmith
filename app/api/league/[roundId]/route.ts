@@ -1,7 +1,15 @@
-import { FriendLeague, getUpdatedRoundStatus } from "@/app/types/FriendLeague";
+import {
+  FriendLeague,
+  getUpdatedRoundStatus,
+  Player,
+  PlayerVote,
+  RoundStatus,
+  Submission,
+} from "@/app/types/FriendLeague";
 import addData from "../../firebase/addData";
 import getDoc from "../../firebase/getData";
 import { NextRequest } from "next/server";
+import { sendNotification } from "../../apiUtils";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -73,6 +81,13 @@ export async function POST(
         });
       }
       round.submissions.push(submission);
+      const lastPlayerId = getLastPlayer(round.submissions, league.players);
+      if (lastPlayerId) {
+        sendNotification(
+          lastPlayerId,
+          `You're the last to submit for ${league.config.name}!`
+        );
+      }
     }
 
     if (playerVote) {
@@ -83,9 +98,21 @@ export async function POST(
         });
       }
       round.votes.push(playerVote);
+      const lastPlayerId = getLastPlayer(round.votes, league.players);
+      if (lastPlayerId) {
+        sendNotification(
+          lastPlayerId,
+          `You're the last to vote for ${league.config.name}!`
+        );
+      }
     }
 
+    const prevStatus = round.status;
     round.status = getUpdatedRoundStatus(round, league);
+
+    if (prevStatus !== round.status) {
+      sendRoundChangeNotifications(playerId, league, round.status);
+    }
 
     const updatedLeague = {
       ...league,
@@ -99,5 +126,42 @@ export async function POST(
     });
   } catch (err) {
     throw new Error(err as string);
+  }
+}
+
+function sendRoundChangeNotifications(
+  playerId: string,
+  league: FriendLeague,
+  status: RoundStatus
+) {
+  const listWithoutCurrPlayer = league.players.filter((p) => p.id !== playerId);
+  let message;
+
+  switch (status) {
+    case "voting":
+      message = `Voting has started for ${league.config.name}.`;
+    case "completed":
+      message = `The round has completed for ${league.config.name}. Check and see how you did!`;
+    case "in progress":
+      message = `The game has started for ${league.config.name}!`;
+  }
+
+  if (!message) {
+    return;
+  }
+
+  for (const player of listWithoutCurrPlayer) {
+    sendNotification(player.id, message);
+  }
+}
+
+function getLastPlayer(
+  list: Pick<Submission, "playerId">[] | Pick<PlayerVote, "playerId">[],
+  players: Player[]
+) {
+  const listIds = list.map((l) => l.playerId);
+  const playersLeft = players.filter((p) => !listIds.includes(p.id));
+  if (playersLeft.length === 1) {
+    return playersLeft.at(0)?.id;
   }
 }

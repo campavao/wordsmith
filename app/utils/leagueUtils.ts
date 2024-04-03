@@ -36,7 +36,6 @@ export async function joinGame({ leagueId }: JoinGame) {
 }
 
 interface CreateGame {
-  player: Player;
   payload: CreateGamePayload;
 }
 
@@ -50,14 +49,10 @@ export interface CreateGamePayload {
   prompts: Prompt[];
 }
 
-export async function createGame({ player, payload }: CreateGame) {
-  if (!player) {
-    throw new Error("No player supplied");
-  }
-
+export async function createGame({ payload }: CreateGame) {
   const response = await fetch("/api/league", {
     method: "POST",
-    body: JSON.stringify({ player, payload }),
+    body: JSON.stringify({ payload }),
   });
 
   return response.json();

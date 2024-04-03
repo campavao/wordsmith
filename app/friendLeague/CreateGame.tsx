@@ -25,7 +25,7 @@ interface CreateGameForm {
   prompts: HTMLInputElement[];
 }
 
-export function CreateGame({ player, cancel }: CreateOrJoinGame) {
+export function CreateGame({ cancel }: CreateOrJoinGame) {
   const router = useRouter();
   const imageRef = useRef<HTMLImageElement>(null);
   const leagueId = useMemo(() => createLeagueId(5), []);
@@ -57,7 +57,7 @@ export function CreateGame({ player, cancel }: CreateOrJoinGame) {
         })),
       };
 
-      const { error, message } = await createGame({ player, payload });
+      const { error, message } = await createGame({ payload });
 
       if (error) {
         console.error(message);
@@ -65,7 +65,7 @@ export function CreateGame({ player, cancel }: CreateOrJoinGame) {
 
       router.push(`/league/${leagueId}`);
     },
-    [leagueId, player, router]
+    [leagueId, router]
   );
 
   const onImageUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
