@@ -34,25 +34,27 @@ export default async function ResultsPage({
   for (const player of game.players) {
     const playerId = player.id;
 
-    const totalScore = game.rounds.reduce((acc, round) => {
-      const submissionId = round.submissions.find(
-        (s) => s.playerId === playerId
-      )?.id;
+    const totalScore = game.rounds
+      .filter((round) => round.status === "completed")
+      .reduce((acc, round) => {
+        const submissionId = round.submissions.find(
+          (s) => s.playerId === playerId
+        )?.id;
 
-      if (!submissionId) {
-        return acc;
-      }
-      const votesFromSubmission = round.votes.flatMap((v) =>
-        v.submissions.filter((s) => s.submissionId === submissionId)
-      );
+        if (!submissionId) {
+          return acc;
+        }
+        const votesFromSubmission = round.votes.flatMap((v) =>
+          v.submissions.filter((s) => s.submissionId === submissionId)
+        );
 
-      const totalScoreFromSubmission = votesFromSubmission.reduce(
-        (acc, curr) => acc + curr.score,
-        0
-      );
+        const totalScoreFromSubmission = votesFromSubmission.reduce(
+          (acc, curr) => acc + curr.score,
+          0
+        );
 
-      return acc + totalScoreFromSubmission;
-    }, 0);
+        return acc + totalScoreFromSubmission;
+      }, 0);
 
     playerMap.set(playerId, totalScore);
   }
