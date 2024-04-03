@@ -142,10 +142,13 @@ async function sendRoundChangeNotifications(
   switch (status) {
     case "voting":
       message = `Voting has started for ${league.config.name}.`;
+      break;
     case "completed":
       message = `The round has completed for ${league.config.name}. Check and see how you did!`;
+      break;
     case "in progress":
       message = `The game has started for ${league.config.name}!`;
+      break;
   }
 
   if (!message) {
