@@ -157,7 +157,9 @@ export async function sendNotification(playerId: string, message: string) {
     playerId
   );
 
-  subscriptions.forEach(({ subscription }) =>
-    webpush.sendNotification(subscription, message)
+  await Promise.all(
+    subscriptions.map(({ subscription }) =>
+      webpush.sendNotification(subscription, message)
+    )
   );
 }

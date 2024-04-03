@@ -1,14 +1,12 @@
 import { getPlayer } from "../apiUtils";
 import addData from "../firebase/addData";
-import { v4 as uuid } from "uuid";
 
 // Save subscription
 export async function POST(request: Request) {
   const player = await getPlayer();
-  const subscription = await request.json();
-  const subscriptionId = uuid();
+  const { subscription, id } = await request.json();
 
-  await addData("subscriptions", subscriptionId, {
+  await addData("subscriptions", id, {
     subscription: subscription,
     playerId: player.id,
   });

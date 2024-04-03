@@ -1,4 +1,5 @@
 const publicKey = 'BGsr1b6XHD50SVpEMuFKuHwc8UFJzQ24czBUAdhp3texWUFV_H7n86Wz2fCGAhenPPaySb98wBhWerHFsOV6duw'
+const id = crypto.randomUUID()
 const urlBase64ToUint8Array = (base64String) => {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
@@ -19,7 +20,7 @@ const saveSubscription = async (subscription) => {
   const response = await fetch("/api/subscription", {
     method: "post",
     headers: { "Content-type": "application/json" },
-    body: JSON.stringify(subscription),
+    body: JSON.stringify({subscription, id}),
   });
 
   return response.json();
@@ -38,4 +39,9 @@ self.addEventListener("activate", async (e) => {
 
 self.addEventListener("push", (e) => {
   self.registration.showNotification("Wordsmith", { body: e.data.text() });
+});
+
+self.addEventListener('pushsubscriptionchange', async (event) => {
+  const subscription = await self.registration.pushManager.subscribe(event.oldSubscription.options)
+  await saveSubscription(subscription)
 });
