@@ -13,11 +13,11 @@ export function FriendLeagueClient({ player }: { player: Player }) {
   const cancelJoin = useCallback(() => setIsJoining(false), []);
 
   if (isJoining) {
-    return <Join player={player} cancel={cancelJoin} />;
+    return <Join cancel={cancelJoin} />;
   }
 
   if (isCreating) {
-    return <CreateGame player={player} cancel={cancelCreate} />;
+    return <CreateGame cancel={cancelCreate} />;
   }
 
   return (
@@ -30,10 +30,9 @@ export function FriendLeagueClient({ player }: { player: Player }) {
 
 export interface CreateOrJoinGame {
   cancel: () => void;
-  player: Player;
 }
 
-function Join({ cancel, player }: CreateOrJoinGame) {
+function Join({ cancel }: CreateOrJoinGame) {
   const router = useRouter();
   const [error, setError] = useState<string>();
 
@@ -55,7 +54,6 @@ function Join({ cancel, player }: CreateOrJoinGame) {
 
     try {
       const { error, message } = await joinGame({
-        player,
         leagueId: formData.leagueId,
       });
       if (error) {

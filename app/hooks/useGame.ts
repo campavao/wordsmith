@@ -31,7 +31,6 @@ export function useGame({ leagueId, roundId }: useGameProps): useGameState {
 
     const { data, message, error } = await getGame({
       leagueId: leagueId,
-      player: session.user,
     });
 
     if (error) {

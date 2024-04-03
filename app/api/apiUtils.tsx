@@ -8,11 +8,18 @@ import {
   PlayerVote,
   Submission,
 } from "../types/FriendLeague";
-import { getServerSession, Session } from "next-auth";
+import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
 import { redirect } from "next/navigation";
 import addData from "./firebase/addData";
-import { addToArray } from "./firebase/updateData";
+import { getDocuments } from "./firebase/get";
+import webpush from "web-push";
+
+webpush.setVapidDetails(
+  "mailto:cam9548@gmail.com",
+  process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY ?? "",
+  process.env.WEB_PUSH_PRIVATE_KEY ?? ""
+);
 
 type ServerResponse = { data?: FriendLeague; error?: true; message: string };
 
@@ -135,4 +142,22 @@ export async function updateRoundForUser({
   } catch (err) {
     throw new Error(err as string);
   }
+}
+
+type PlayerSubscription = {
+  playerId: string;
+  subscription: webpush.PushSubscription;
+};
+
+export async function sendNotification(playerId: string, message: string) {
+  const subscriptions = await getDocuments<PlayerSubscription>(
+    "subscriptions",
+    "playerId",
+    "==",
+    playerId
+  );
+
+  subscriptions.forEach(({ subscription }) =>
+    webpush.sendNotification(subscription, message)
+  );
 }
