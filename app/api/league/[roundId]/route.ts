@@ -80,10 +80,11 @@ export async function POST(
           error: true,
         });
       }
-      round.submissions.push(submission);
-      const lastPlayerId = getLastPlayer(round.submissions, league.players);
+      const newSubmissions = [...round.submissions, submission];
+      round.submissions = newSubmissions;
+      const lastPlayerId = getLastPlayer(newSubmissions, league.players);
       if (lastPlayerId) {
-        sendNotification(
+        await sendNotification(
           lastPlayerId,
           `You're the last to submit for ${league.config.name}!`
         );
@@ -97,10 +98,11 @@ export async function POST(
           error: true,
         });
       }
-      round.votes.push(playerVote);
-      const lastPlayerId = getLastPlayer(round.votes, league.players);
+      const newVotes = [...round.votes, playerVote];
+      round.votes = newVotes;
+      const lastPlayerId = getLastPlayer(newVotes, league.players);
       if (lastPlayerId) {
-        sendNotification(
+        await sendNotification(
           lastPlayerId,
           `You're the last to vote for ${league.config.name}!`
         );
@@ -129,7 +131,7 @@ export async function POST(
   }
 }
 
-function sendRoundChangeNotifications(
+async function sendRoundChangeNotifications(
   playerId: string,
   league: FriendLeague,
   status: RoundStatus
@@ -150,9 +152,9 @@ function sendRoundChangeNotifications(
     return;
   }
 
-  for (const player of listWithoutCurrPlayer) {
-    sendNotification(player.id, message);
-  }
+  await Promise.all(
+    listWithoutCurrPlayer.map((player) => sendNotification(player.id, message))
+  );
 }
 
 function getLastPlayer(
