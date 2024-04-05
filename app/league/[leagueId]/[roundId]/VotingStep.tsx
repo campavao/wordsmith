@@ -130,7 +130,7 @@ export function VotingStepClient({
 
   return (
     <div className='flex flex-col items-center'>
-      <blockquote className='max-w-lg p-5'>
+      <blockquote className='max-w-lg text-italic p-5'>
         <p>{prompt}</p>
       </blockquote>
 

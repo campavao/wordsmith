@@ -2,11 +2,12 @@ import { FriendLeague, getUpdatedRoundStatus } from "@/app/types/FriendLeague";
 import addData from "../../firebase/addData";
 import getDoc from "../../firebase/getData";
 import { NextRequest } from "next/server";
+import { getPlayer } from "../../apiUtils";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const leagueId = searchParams.get("leagueId");
-  const email = searchParams.get("playerEmail");
+  const { email } = await getPlayer();
 
   if (leagueId == null) {
     return Response.json({ message: "no league id", error: true });
@@ -36,7 +37,6 @@ export async function GET(request: Request) {
 
   return Response.json({
     message: "getting game",
-    data: game,
   });
 }
 
@@ -46,8 +46,9 @@ export async function POST(
   { params }: { params: { roundId: string } }
 ) {
   // Your server-side logic here
-  const { playerId, submission, playerVote, leagueId } = await request.json();
+  const { submission, playerVote, leagueId } = await request.json();
   const { roundId } = params;
+  const player = await getPlayer();
 
   try {
     const serverLeague = await getDoc("games", leagueId);
@@ -66,23 +67,39 @@ export async function POST(
       });
     }
     if (submission) {
-      if (round.submissions.find((sub) => sub.playerId === playerId)) {
+      if (round.submissions.find((sub) => sub.playerId === player.id)) {
         return Response.json({
           message: "already submitted",
           error: true,
         });
       }
-      round.submissions.push(submission);
+
+      const serverSubmission = {
+        ...submission,
+        playerId: player.id,
+      };
+
+      // dual write to new submission tables
+      await addData("submissions", submission.id, {
+        ...serverSubmission,
+        config: {
+          leagueId,
+          leagueName: league.config.name,
+          roundPrompt: round.prompt,
+        },
+      });
+
+      round.submissions.push(serverSubmission);
     }
 
     if (playerVote) {
-      if (round.votes.find((sub) => sub.playerId === playerId)) {
+      if (round.votes.find((sub) => sub.playerId === player.id)) {
         return Response.json({
           message: "already voted",
           error: true,
         });
       }
-      round.votes.push(playerVote);
+      round.votes.push({ ...playerVote, playerId: player.id });
     }
 
     round.status = getUpdatedRoundStatus(round, league);

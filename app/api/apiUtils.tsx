@@ -1,4 +1,4 @@
-import getDocument from "./firebase/getData";
+import getDocument, { getDocuments } from "./firebase/getData";
 import {
   FriendLeague,
   getUpdatedRoundStatus,
@@ -13,6 +13,8 @@ import { authOptions } from "./auth";
 import { redirect } from "next/navigation";
 import addData from "./firebase/addData";
 import { addToArray } from "./firebase/updateData";
+import { getDocs } from "firebase/firestore";
+import { ServerSubmission } from "../profile/page";
 
 type ServerResponse = { data?: FriendLeague; error?: true; message: string };
 
@@ -135,4 +137,22 @@ export async function updateRoundForUser({
   } catch (err) {
     throw new Error(err as string);
   }
+}
+
+export async function getSubmissions(playerId: string) {
+  const rawSubmissions = await getDocuments("submissions", {
+    fieldPath: "playerId",
+    opStr: "==",
+    value: playerId,
+  });
+
+  const submissions: ServerSubmission[] = [];
+
+  rawSubmissions.forEach((sub) => {
+    if (sub.exists()) {
+      submissions.push(sub.data() as ServerSubmission);
+    }
+  });
+
+  return submissions;
 }

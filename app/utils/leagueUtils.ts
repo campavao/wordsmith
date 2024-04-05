@@ -71,22 +71,19 @@ export async function createGame({ player, payload }: CreateGame) {
 interface AddSubmission {
   title: string;
   roundId: string;
-  playerId: string;
   text: string;
   leagueId: string;
   id: string;
 }
 
 export async function addSubmission({
-  playerId,
   text,
   title,
   roundId,
   leagueId,
   id,
 }: AddSubmission) {
-  const submission: Submission = {
-    playerId,
+  const submission: Omit<Submission, "playerId"> = {
     roundId,
     text,
     title,
@@ -95,7 +92,7 @@ export async function addSubmission({
 
   const response = await fetch(`/api/league/${roundId}`, {
     method: "POST",
-    body: JSON.stringify({ playerId, submission, leagueId }),
+    body: JSON.stringify({ submission, leagueId }),
   });
 
   return response.json();

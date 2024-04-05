@@ -13,7 +13,6 @@ interface WritingStepClient {
   limit: number;
   prompt: string;
   isLastPlayer: boolean;
-  playerId: string;
   leagueId: string;
   roundId: string;
   foundText?: string;
@@ -23,7 +22,6 @@ interface WritingStepClient {
 export function WritingStepClient({
   limit,
   prompt,
-  playerId,
   roundId,
   leagueId,
   isLastPlayer,
@@ -42,7 +40,6 @@ export function WritingStepClient({
     try {
       const id = uuid();
       await addSubmission({
-        playerId,
         roundId,
         text: text,
         title,
@@ -58,7 +55,7 @@ export function WritingStepClient({
     } catch (e: any) {
       throw new Error(e);
     }
-  }, [playerId, roundId, text, title, leagueId, isLastPlayer, router]);
+  }, [ roundId, text, title, leagueId, isLastPlayer, router]);
 
   const onTyping = useCallback(
     (
