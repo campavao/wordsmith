@@ -21,7 +21,7 @@ import {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const leagueId = searchParams.get("leagueId");
-  const email = searchParams.get("playerEmail");
+  const { email } = await getPlayer();
 
   if (leagueId == null) {
     return Response.json({ message: "no league id", error: true });
@@ -51,7 +51,6 @@ export async function GET(request: Request) {
 
   return Response.json({
     message: "getting game",
-    data: game,
   });
 }
 
@@ -74,8 +73,22 @@ export async function POST(
           error: true,
         });
       }
-      const submissionWithId = { ...submission, playerId: player.id };
-      const newSubmissions = [...round.submissions, submissionWithId];
+      const serverSubmission = {
+        ...submission,
+        playerId: player.id,
+      };
+
+      // dual write to new submission tables
+      await addData("submissions", submission.id, {
+        ...serverSubmission,
+        config: {
+          leagueId,
+          leagueName: league.config.name,
+          roundPrompt: round.prompt,
+        },
+      });
+
+      const newSubmissions = [...round.submissions, serverSubmission];
       round.submissions = newSubmissions;
       const lastPlayerId = getLastPlayer(newSubmissions, league.players);
       if (lastPlayerId) {

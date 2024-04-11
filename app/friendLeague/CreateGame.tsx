@@ -236,6 +236,20 @@ function PromptSetup() {
     [prompts]
   );
 
+  const onAddRandomPrompt = useCallback(
+    (e: MouseEvent<HTMLButtonElement> & { target: { id: string } }) => {
+      e.preventDefault();
+      const prompt = getRandomPrompt();
+      const id = e.target.id;
+      const newPrompts = prompts.map((item) =>
+        item.id === id ? { ...item, text: prompt } : item
+      );
+
+      setPrompts(newPrompts);
+    },
+    [prompts]
+  );
+
   return (
     <label className='flex flex-col gap-4'>
       Prompts
@@ -257,7 +271,14 @@ function PromptSetup() {
               placeholder={getPlaceholder(key)}
               data-limit={item.wordLimit}
             />
-            <div className='flex self-center sm:self-auto sm:flex-col place-content-between w-full sm:w-28 p-1 border-b'>
+            <button
+              className='pointer sm:w-4 sm:block w-full flex justify-center'
+              title='Add random prompt'
+              onClick={onAddRandomPrompt}
+            >
+              <RefreshIcon id={item.id} />
+            </button>
+            <div className='flex self-center sm:self-auto sm:flex-col place-content-between w-full sm:w-28 p-1'>
               <label className='text-center'>
                 Word limit:
                 <input
@@ -266,7 +287,7 @@ function PromptSetup() {
                   max={1000}
                   value={item.wordLimit}
                   onChange={updateWordLimit}
-                  className='w-28 text-center'
+                  className='w-28 text-center border-b'
                 />
               </label>
               {key > 0 && (
@@ -290,3 +311,52 @@ const getPlaceholder = (index: number) => {
     ? DEFAULT_PROMPTS[index]
     : DEFAULT_PROMPTS[0];
 };
+
+const getRandomPrompt = () => {
+  const index = Math.round(Math.random() * DEFAULT_PROMPTS.length);
+  return DEFAULT_PROMPTS[index];
+};
+
+function RefreshIcon({ id }: { id: string }) {
+  return (
+    <svg
+      id={id}
+      width='24px'
+      height='24px'
+      strokeWidth='1.5'
+      viewBox='0 0 24 24'
+      fill='none'
+      xmlns='http://www.w3.org/2000/svg'
+      color='#000000'
+    >
+      <path
+        d='M21.1679 8C19.6247 4.46819 16.1006 2 11.9999 2C6.81459 2 2.55104 5.94668 2.04932 11'
+        stroke='#000000'
+        strokeWidth='1.5'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      ></path>
+      <path
+        d='M17 8H21.4C21.7314 8 22 7.73137 22 7.4V3'
+        stroke='#000000'
+        strokeWidth='1.5'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      ></path>
+      <path
+        d='M2.88146 16C4.42458 19.5318 7.94874 22 12.0494 22C17.2347 22 21.4983 18.0533 22 13'
+        stroke='#000000'
+        strokeWidth='1.5'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      ></path>
+      <path
+        d='M7.04932 16H2.64932C2.31795 16 2.04932 16.2686 2.04932 16.6V21'
+        stroke='#000000'
+        strokeWidth='1.5'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      ></path>
+    </svg>
+  );
+}

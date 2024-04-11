@@ -16,7 +16,7 @@ export const SubmitButton = forwardRef<HTMLButtonElement, SubmitButton>(
     return (
       <button
         {...rest}
-        className={`${className} disabled:text-gray-400`}
+        className={`${className} h-6 flex justify-center items-center disabled:text-gray-400`}
         type='submit'
         disabled={disabled || loading}
         onClick={onClick}

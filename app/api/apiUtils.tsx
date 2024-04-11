@@ -6,6 +6,7 @@ import {
   LeagueId,
   Player,
   PlayerVote,
+  ServerSubmission,
   Submission,
 } from "../types/FriendLeague";
 import { getServerSession } from "next-auth";
@@ -73,6 +74,18 @@ export async function getPlayer(): Promise<Player> {
   return user;
 }
 
+export async function getPlayerFromId(
+  playerId: string
+): Promise<Player | undefined> {
+  const user = await getDocument("users", playerId);
+
+  if (!user.exists()) {
+    return undefined;
+  }
+
+  return user.data() as Player;
+}
+
 interface AddSubmission {
   player: Player;
   submission?: Submission;
@@ -127,6 +140,16 @@ export async function updateRoundForUser({
   } catch (err) {
     throw new Error(err as string);
   }
+}
+
+export async function getSubmissions(playerId: string) {
+  const submissions = await getDocuments<ServerSubmission>("submissions",
+    "playerId",
+    "==",
+    playerId,
+  );
+
+  return submissions;
 }
 
 type PlayerSubscription = {

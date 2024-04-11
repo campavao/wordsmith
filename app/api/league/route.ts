@@ -76,6 +76,12 @@ export async function POST(request: Request) {
     rounds: getRounds(payload.prompts),
   };
 
+  const isValid = isLeagueValid(league);
+
+  if (!isValid) {
+    return Response.json({ message: "game setup is invalid", error: true });
+  }
+
   try {
     await addData("games", league.leagueId, league);
 
@@ -152,8 +158,6 @@ export async function PUT(request: Request) {
   }
 }
 
-
-
 function getRounds(prompts: Prompt[]): Round[] {
   return prompts.map(({ id, text: prompt, wordLimit }) => ({
     ...DEFAULT_ROUND,
@@ -161,4 +165,17 @@ function getRounds(prompts: Prompt[]): Round[] {
     id,
     wordLimit,
   }));
+}
+
+function isLeagueValid(league: FriendLeague) {
+  return (
+    league.leagueId != null &&
+    league.config.name != null &&
+    league.config.maxPlayers < 9 &&
+    league.config.numberOfDownvotes < 9 &&
+    league.config.numberOfUpvotes < 9 &&
+    league.rounds.every(
+      (round) => round.wordLimit < 1001 && round.wordLimit > 0
+    )
+  );
 }

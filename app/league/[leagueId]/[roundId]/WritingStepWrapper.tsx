@@ -1,4 +1,4 @@
-"use server"
+"use server";
 import { getPlayer, getServerGame } from "@/app/api/apiUtils";
 import { WritingStepClient } from "./WritingStep";
 import { FriendLeague, Player, Round } from "@/app/types/FriendLeague";
@@ -32,7 +32,6 @@ export async function WritingStep({
       prompt={prompt}
       foundText={activeSubmission?.text}
       foundTitle={activeSubmission?.title}
-      playerId={player.id}
       leagueId={leagueId}
       roundId={round.id}
       isLastPlayer={isLastPlayer}

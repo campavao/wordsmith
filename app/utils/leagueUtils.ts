@@ -1,7 +1,6 @@
 "client only";
 import {
   LeagueId,
-  Player,
   PlayerVote,
   Submission,
   VotedSubmission,

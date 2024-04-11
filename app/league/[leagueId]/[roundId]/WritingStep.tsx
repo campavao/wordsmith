@@ -22,7 +22,6 @@ interface WritingStepClient {
   limit: number;
   prompt: string;
   isLastPlayer: boolean;
-  playerId: string;
   leagueId: string;
   roundId: string;
   foundText?: string;
@@ -32,7 +31,6 @@ interface WritingStepClient {
 export function WritingStepClient({
   limit,
   prompt,
-  playerId,
   roundId,
   leagueId,
   isLastPlayer,
