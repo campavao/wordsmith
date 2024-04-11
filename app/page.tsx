@@ -14,6 +14,7 @@ async function Home() {
         <div className='flex flex-col gap-4 text-center'>
           <Link href='/friendLeague'>Friend League</Link>
           <Link href='/globalLeague'>Global League</Link>
+          <Link href='/submissions'>Recent Works</Link>
           <Link href='/profile'>Profile</Link>
           <Login isSignout />
           <History />

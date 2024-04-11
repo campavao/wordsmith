@@ -6,6 +6,7 @@ import {
   LeagueId,
   Player,
   PlayerVote,
+  ServerSubmission,
   Submission,
 } from "../types/FriendLeague";
 import { getServerSession } from "next-auth";
@@ -20,8 +21,6 @@ webpush.setVapidDetails(
   process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY ?? "",
   process.env.WEB_PUSH_PRIVATE_KEY ?? ""
 );
-import { getDocs } from "firebase/firestore";
-import { ServerSubmission } from "../profile/page";
 
 type ServerResponse = { data?: FriendLeague; error?: true; message: string };
 
@@ -73,6 +72,18 @@ export async function getPlayer(): Promise<Player> {
   }
 
   return user;
+}
+
+export async function getPlayerFromId(
+  playerId: string
+): Promise<Player | undefined> {
+  const user = await getDocument("users", playerId);
+
+  if (!user.exists()) {
+    return undefined;
+  }
+
+  return user.data() as Player;
 }
 
 interface AddSubmission {

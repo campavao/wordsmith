@@ -1,23 +1,28 @@
 "use client";
 import { useCallback, useState } from "react";
-import { LeagueId } from "../types/FriendLeague";
 
-export function CopyLeagueId({ leagueId }: { leagueId: LeagueId }) {
+export function ShareButton({
+  className,
+  submissionId,
+}: {
+  className: string;
+  submissionId: string;
+}) {
   const [copied, setCopied] = useState(false);
 
-  const copyLeagueId = useCallback(() => {
+  const share = useCallback(() => {
     // Copy the text inside the text field
-    copyToClipboard(leagueId);
+    copyToClipboard(`${window.location.origin}/submissions/${submissionId}`);
     setCopied(true);
-  }, [leagueId]);
+  }, [submissionId]);
 
   return (
-    <p>
-      League ID:{" "}
-      <button className='text-bold flex gap-2' onClick={copyLeagueId}>
-        {leagueId} {copied ? <CheckIcon /> : <CopyIcon />}
-      </button>
-    </p>
+    <button
+      className={`${className} justify-center text-bold flex gap-2`}
+      onClick={share}
+    >
+      Share {copied ? <CheckIcon /> : <CopyIcon />}
+    </button>
   );
 }
 

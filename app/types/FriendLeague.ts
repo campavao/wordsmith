@@ -16,6 +16,11 @@ export interface ServerSubmission {
   roundId: string;
   text: string;
   title: string;
+  config?: {
+    leagueId: LeagueId;
+    leagueName: string;
+    roundPrompt: string;
+  };
 }
 
 export type Submission = Omit<ServerSubmission, "playerId">;
@@ -94,6 +99,16 @@ export const DEFAULT_PROMPTS: string[] = [
   "On a distant planet, a group of explorers encounters a civilization with advanced technology and learns about the secrets of their advanced society.",
   "A person discovers a book that accurately predicts the future, and they must decide whether to use this knowledge for the greater good or for personal gain.",
   "In a futuristic city, individuals start developing superhuman abilities, and the government must decide whether to control or embrace these newfound powers.",
+  "The old book sat on the dusty shelf, its pages whispering secrets of centuries past. Little did she know, opening it would change her life forever.",
+  "The clock struck midnight as the streets fell silent, except for the faint sound of footsteps echoing in the darkness. Someone was following her, but when she turned around, there was no one there.",
+  "In the abandoned mansion, strange lights flickered in the windows, illuminating the overgrown garden with an eerie glow. They had always heard rumors about the place being haunted, but they never believed it until now.",
+  "As the storm raged outside, she sat by the fireplace, sipping hot cocoa and reading her favorite book. But when she heard a knock on the door, she realized she was all alone in the house.",
+  "Deep in the forest, where the trees whispered ancient secrets, a hidden path beckoned to those who dared to explore. But they soon discovered that some secrets were better left undisturbed.",
+  "The astronaut gazed out of the spaceship's window, mesmerized by the infinite expanse of stars stretching out before him. But when he looked closer, he saw something out there, something he couldn't explain.",
+  "In the quiet town, where nothing ever seemed to happen, a mysterious stranger arrived, stirring up rumors and suspicion among the locals. Little did they know, the stranger was hiding a dark secret that would soon be revealed.",
+  "As she walked through the carnival, the laughter and music filled her with a sense of nostalgia for childhood days gone by. But when she stumbled upon a hidden tent at the edge of the fairgrounds, she realized this carnival held secrets far darker than she could have imagined.",
+  "The painting hung on the wall, its eyes seeming to follow her every move with an unsettling intensity. She had always been drawn to it, but now she couldn't shake the feeling that it was watching her, waiting for something.",
+  "The door creaked open, revealing a room bathed in darkness except for a single flickering candle. She stepped inside, feeling a chill run down her spine as she realized she was not alone in the room.",
 ];
 
 export function getUpdatedRoundStatus(
