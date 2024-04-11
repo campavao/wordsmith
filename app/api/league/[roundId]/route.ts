@@ -4,12 +4,19 @@ import {
   Player,
   PlayerVote,
   RoundStatus,
+  ServerPlayerVote,
+  ServerSubmission,
   Submission,
 } from "@/app/types/FriendLeague";
 import addData from "../../firebase/addData";
 import getDoc from "../../firebase/getData";
 import { NextRequest } from "next/server";
-import { sendNotification } from "../../apiUtils";
+import {
+  getLeague,
+  getPlayer,
+  getRoundFromLeague,
+  sendNotification,
+} from "../../apiUtils";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -53,34 +60,22 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { roundId: string } }
 ) {
-  // Your server-side logic here
-  const { playerId, submission, playerVote, leagueId } = await request.json();
+  const player = await getPlayer();
+  const { submission, playerVote, leagueId } = await request.json();
   const { roundId } = params;
+  const league = await getLeague(leagueId);
+  const round = getRoundFromLeague(league, roundId);
 
   try {
-    const serverLeague = await getDoc("games", leagueId);
-    if (!serverLeague.exists()) {
-      return Response.json({
-        message: "game does not exist",
-        error: true,
-      });
-    }
-    const league = serverLeague.data() as FriendLeague;
-    const round = league.rounds.find((item) => item.id === roundId);
-    if (!round) {
-      return Response.json({
-        message: "round does not exist",
-        error: true,
-      });
-    }
     if (submission) {
-      if (round.submissions.find((sub) => sub.playerId === playerId)) {
+      if (round.submissions.find((sub) => sub.playerId === player.id)) {
         return Response.json({
           message: "already submitted",
           error: true,
         });
       }
-      const newSubmissions = [...round.submissions, submission];
+      const submissionWithId = { ...submission, playerId: player.id };
+      const newSubmissions = [...round.submissions, submissionWithId];
       round.submissions = newSubmissions;
       const lastPlayerId = getLastPlayer(newSubmissions, league.players);
       if (lastPlayerId) {
@@ -92,13 +87,14 @@ export async function POST(
     }
 
     if (playerVote) {
-      if (round.votes.find((sub) => sub.playerId === playerId)) {
+      if (round.votes.find((sub) => sub.playerId === player.id)) {
         return Response.json({
           message: "already voted",
           error: true,
         });
       }
-      const newVotes = [...round.votes, playerVote];
+      const voteWithId = { ...playerVote, playerId: player.id };
+      const newVotes = [...round.votes, voteWithId];
       round.votes = newVotes;
       const lastPlayerId = getLastPlayer(newVotes, league.players);
       if (lastPlayerId) {
@@ -110,23 +106,19 @@ export async function POST(
     }
 
     const prevStatus = round.status;
-    round.status = getUpdatedRoundStatus(round, league);
+    round.status = getUpdatedRoundStatus(round, league.players.length);
 
     if (prevStatus !== round.status) {
-      sendRoundChangeNotifications(playerId, league, round.status);
+      sendRoundChangeNotifications(player.id, league, round.status);
     }
 
-    const updatedLeague = {
-      ...league,
-      rounds: [...league.rounds],
-    };
-
-    await addData("games", leagueId, updatedLeague);
+    await addData("games", leagueId, league);
 
     return Response.json({
       message: "submission successful",
     });
   } catch (err) {
+    console.log(err);
     throw new Error(err as string);
   }
 }
@@ -161,7 +153,9 @@ async function sendRoundChangeNotifications(
 }
 
 function getLastPlayer(
-  list: Pick<Submission, "playerId">[] | Pick<PlayerVote, "playerId">[],
+  list:
+    | Pick<ServerSubmission, "playerId">[]
+    | Pick<ServerPlayerVote, "playerId">[],
   players: Player[]
 ) {
   const listIds = list.map((l) => l.playerId);

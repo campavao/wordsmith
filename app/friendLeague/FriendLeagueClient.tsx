@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Player, LeagueId } from "../types/FriendLeague";
 import { joinGame } from "../utils/leagueUtils";
 import { CreateGame } from "./CreateGame";
+import { SubmitButton } from "../components/SubmitButton";
 
 export function FriendLeagueClient({ player }: { player: Player }) {
   const [isCreating, setIsCreating] = useState<boolean>(false);
@@ -35,6 +36,7 @@ export interface CreateOrJoinGame {
 function Join({ cancel }: CreateOrJoinGame) {
   const router = useRouter();
   const [error, setError] = useState<string>();
+  const [isSubmitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<{ leagueId: LeagueId }>({
     leagueId: "",
@@ -51,6 +53,7 @@ function Join({ cancel }: CreateOrJoinGame) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
 
     try {
       const { error, message } = await joinGame({
@@ -58,11 +61,14 @@ function Join({ cancel }: CreateOrJoinGame) {
       });
       if (error) {
         setError(message);
+        setSubmitting(false);
         return;
       }
       router.push(`/league/${formData.leagueId}`);
     } catch (err: any) {
-      throw new Error(err);
+      setSubmitting(false);
+      setError(err.message);
+      console.error(err);
     }
   };
 
@@ -81,7 +87,14 @@ function Join({ cancel }: CreateOrJoinGame) {
         className='border rounded-sm p-2 text-center text-black'
         id='league-code'
       />
-      <button type='submit'>Join</button>
+      <SubmitButton
+        className='w-28 self-center'
+        type='submit'
+        disabled={formData.leagueId === ""}
+        loading={isSubmitting}
+      >
+        Join
+      </SubmitButton>
       <button onClick={cancel}>Back</button>
     </form>
   );

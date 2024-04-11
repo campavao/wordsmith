@@ -1,5 +1,12 @@
 "use client";
-import { useState, useCallback, useRef, Ref } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  Ref,
+  FormEvent,
+  MouseEventHandler,
+} from "react";
 import { Preview } from "./components/Preview";
 import { ReactQuill, writingModules } from "./components/Quill";
 import { v4 as uuid } from "uuid";
@@ -8,6 +15,8 @@ import { Sources } from "quill";
 import { UnprivilegedEditor } from "react-quill";
 import { addSubmission } from "@/app/utils/leagueUtils";
 import { useRouter } from "next/navigation";
+import { SubmitButton } from "@/app/components/SubmitButton";
+import Error from "../error";
 
 interface WritingStepClient {
   limit: number;
@@ -35,30 +44,40 @@ export function WritingStepClient({
   const [wordCount, setWordCount] = useState<number>(0);
   const [title, setTitle] = useState<string>(foundTitle ?? "");
   const [isDone, setIsDone] = useState<boolean>(!!foundText && !!foundTitle);
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [error, setError] = useState();
+
   const escapeButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
 
-  const onSubmit = useCallback(async () => {
-    try {
-      const id = uuid();
-      await addSubmission({
-        playerId,
-        roundId,
-        text: text,
-        title,
-        leagueId,
-        id,
-      });
+  const onSubmit = useCallback(
+    async (e: FormEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      setSubmitting(true);
 
-      setIsDone(true);
+      try {
+        const id = uuid();
+        await addSubmission({
+          roundId,
+          text: text,
+          title,
+          leagueId,
+          id,
+        });
 
-      if (isLastPlayer) {
-        router.refresh();
+        setIsDone(true);
+
+        if (isLastPlayer) {
+          router.refresh();
+        }
+      } catch (e: any) {
+        setSubmitting(false);
+        console.error(e);
+        setError(e.message);
       }
-    } catch (e: any) {
-      throw new Error(e);
-    }
-  }, [playerId, roundId, text, title, leagueId, isLastPlayer, router]);
+    },
+    [roundId, text, title, leagueId, isLastPlayer, router]
+  );
 
   const onTyping = useCallback(
     (
@@ -111,6 +130,7 @@ export function WritingStepClient({
         </blockquote>
       )}
       <div className='border-b w-10 my-5 self-center' />
+      {error && <Error message={error} />}
 
       {/* Tried to do just one or a conditional, but changing modules is bad I guess and will break the content */}
       {!readyToSubmit && (
@@ -123,6 +143,7 @@ export function WritingStepClient({
           value={text}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
+              console.log(escapeButtonRef);
               escapeButtonRef.current?.focus();
             }
           }}
@@ -138,6 +159,7 @@ export function WritingStepClient({
         setReadyToSubmit={setReadyToSubmit}
         disabled={(readyToSubmit && title === "") || wordCount === 0}
         escapeButtonRef={escapeButtonRef}
+        isSubmitting={isSubmitting}
       />
     </div>
   );
@@ -151,14 +173,16 @@ function Footer({
   setReadyToSubmit,
   disabled,
   escapeButtonRef,
+  isSubmitting,
 }: {
   showSubmit: boolean;
   wordCount: number;
   limit: number;
-  onSubmit: () => void;
+  onSubmit: MouseEventHandler<HTMLButtonElement>;
   setReadyToSubmit: (value: boolean) => void;
   disabled: boolean;
   escapeButtonRef: Ref<HTMLButtonElement>;
+  isSubmitting: boolean;
 }) {
   const overLimit = wordCount > limit;
   return (
@@ -168,16 +192,18 @@ function Footer({
           Words left: {limit - wordCount}
         </p>
       ) : (
-        <button onClick={() => setReadyToSubmit(false)}>Back</button>
+        <button onClick={() => setReadyToSubmit(false)} disabled={isSubmitting}>
+          Back
+        </button>
       )}
-      <button
-        onClick={() => (showSubmit ? onSubmit() : setReadyToSubmit(true))}
-        className='disabled:text-gray-400'
+      <SubmitButton
         disabled={disabled || overLimit}
+        loading={isSubmitting}
+        onClick={(e) => (showSubmit ? onSubmit(e) : setReadyToSubmit(true))}
         ref={escapeButtonRef}
       >
         {showSubmit ? "Submit" : "Next"}
-      </button>
+      </SubmitButton>
     </div>
   );
 }

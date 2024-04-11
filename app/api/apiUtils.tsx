@@ -82,29 +82,15 @@ interface AddSubmission {
 }
 
 export async function updateRoundForUser({
-  player,
   submission,
   playerVote,
   leagueId,
   roundId,
 }: AddSubmission): Promise<ServerResponse> {
   try {
-    const serverLeague = await getDocument("games", leagueId);
-    if (!serverLeague.exists()) {
-      return {
-        message: "game does not exist",
-        error: true,
-      };
-    }
-    const league = serverLeague.data() as FriendLeague;
-    const round = league.rounds.find((item) => item.id === roundId);
-
-    if (!round) {
-      return {
-        message: "round does not exist",
-        error: true,
-      };
-    }
+    const player = await getPlayer();
+    const league = await getLeague(leagueId);
+    const round = getRoundFromLeague(league, roundId);
 
     if (submission) {
       if (round.submissions.find((sub) => sub.playerId === player.id)) {
@@ -113,7 +99,7 @@ export async function updateRoundForUser({
           error: true,
         };
       }
-      round.submissions.push(submission);
+      round.submissions.push({ ...submission, playerId: player.id });
     }
 
     if (playerVote) {
@@ -123,10 +109,10 @@ export async function updateRoundForUser({
           error: true,
         };
       }
-      round.votes.push(playerVote);
+      round.votes.push({ ...playerVote, playerId: player.id });
     }
 
-    round.status = getUpdatedRoundStatus(round, league);
+    round.status = getUpdatedRoundStatus(round, league.players.length);
 
     const updatedLeague = {
       ...league,
@@ -137,7 +123,6 @@ export async function updateRoundForUser({
 
     return {
       message: "creating with firebase game",
-      data: league,
     };
   } catch (err) {
     throw new Error(err as string);
@@ -157,9 +142,45 @@ export async function sendNotification(playerId: string, message: string) {
     playerId
   );
 
-  await Promise.all(
-    subscriptions.map(({ subscription }) =>
-      webpush.sendNotification(subscription, message)
-    )
-  );
+  try {
+    await Promise.all(
+      subscriptions.map(({ subscription }) =>
+        webpush.sendNotification(subscription, message)
+      )
+    );
+  } catch (err: any) {
+    console.error(err.body);
+  }
+}
+
+export async function getLeague(leagueId: LeagueId) {
+  const serverLeague = await getDocument("games", leagueId);
+  if (!serverLeague.exists()) {
+    redirect("/");
+  }
+  return serverLeague.data() as FriendLeague;
+}
+
+export async function getPlayers(leagueId: LeagueId) {
+  const league = await getLeague(leagueId);
+
+  return {
+    players: league.players,
+    leagueName: league.config.name,
+  };
+}
+
+export async function getRound(leagueId: LeagueId, roundId: string) {
+  const league = await getLeague(leagueId);
+  return getRoundFromLeague(league, roundId);
+}
+
+export function getRoundFromLeague(league: FriendLeague, roundId: string) {
+  const round = league.rounds.find((item) => item.id === roundId);
+
+  if (!round) {
+    redirect(`/league/${league.leagueId}`);
+  }
+
+  return round;
 }

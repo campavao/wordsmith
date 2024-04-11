@@ -8,15 +8,16 @@ import {
   useRef,
   useMemo,
 } from "react";
-import Image from "next/image";
 import {
   createGame,
   CreateGamePayload,
   createLeagueId,
 } from "../utils/leagueUtils";
-import { DEFAULT_PROMPTS, isPlayer } from "../types/FriendLeague";
+import { DEFAULT_PROMPTS } from "../types/FriendLeague";
 import { useRouter } from "next/navigation";
 import { CreateOrJoinGame } from "./FriendLeagueClient";
+import Error from "../league/[leagueId]/error";
+import { SubmitButton } from "../components/SubmitButton";
 
 interface CreateGameForm {
   leagueName: { value: string };
@@ -29,10 +30,13 @@ export function CreateGame({ cancel }: CreateOrJoinGame) {
   const router = useRouter();
   const imageRef = useRef<HTMLImageElement>(null);
   const leagueId = useMemo(() => createLeagueId(5), []);
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [error, setError] = useState();
 
   const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      setSubmitting(true);
 
       const form = e.target as HTMLFormElement & CreateGameForm;
 
@@ -57,10 +61,13 @@ export function CreateGame({ cancel }: CreateOrJoinGame) {
         })),
       };
 
-      const { error, message } = await createGame({ payload });
+      const { error: createError, message } = await createGame({ payload });
 
-      if (error) {
+      if (createError) {
         console.error(message);
+        setError(message);
+        setSubmitting(false);
+        return;
       }
 
       router.push(`/league/${leagueId}`);
@@ -97,6 +104,7 @@ export function CreateGame({ cancel }: CreateOrJoinGame) {
         height={200}
       /> */}
       <form className='flex flex-col sm:w-[60%] gap-6' onSubmit={onSubmit}>
+        {error && <Error message={error} />}
         <label className='flex place-content-between'>
           Name
           <input
@@ -154,9 +162,13 @@ export function CreateGame({ cancel }: CreateOrJoinGame) {
           />
         </label> */}
         <PromptSetup />
-        <button className='w-28 self-center' type='submit'>
+        <SubmitButton
+          className='w-28 self-center'
+          type='submit'
+          loading={isSubmitting}
+        >
           Submit
-        </button>
+        </SubmitButton>
         <button className='w-28 self-center' onClick={cancel}>
           Back
         </button>

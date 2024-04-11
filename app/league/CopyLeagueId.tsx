@@ -1,21 +1,21 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { LeagueId } from "../types/FriendLeague";
 
 export function CopyLeagueId({ leagueId }: { leagueId: LeagueId }) {
+  const [copied, setCopied] = useState(false);
+
   const copyLeagueId = useCallback(() => {
     // Copy the text inside the text field
-    navigator.clipboard.writeText(leagueId);
-
-    // Alert the copied text
-    alert("Copied the text: " + leagueId);
+    copyToClipboard(leagueId);
+    setCopied(true);
   }, [leagueId]);
 
   return (
     <p>
       League ID:{" "}
       <button className='text-bold flex gap-2' onClick={copyLeagueId}>
-        {leagueId} <CopyIcon />
+        {leagueId} {copied ? <CheckIcon /> : <CopyIcon />}
       </button>
     </p>
   );
@@ -41,4 +41,80 @@ function CopyIcon() {
       </g>
     </svg>
   );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      width='24px'
+      height='24px'
+      strokeWidth='1.5'
+      viewBox='0 0 24 24'
+      fill='none'
+      xmlns='http://www.w3.org/2000/svg'
+      color='#000000'
+    >
+      <path
+        d='M5 13L9 17L19 7'
+        stroke='#000000'
+        stroke-width='1.5'
+        stroke-linecap='round'
+        stroke-linejoin='round'
+      ></path>
+    </svg>
+  );
+}
+
+/**
+ * Copy a string to clipboard
+ * @param  {String} string         The string to be copied to clipboard
+ * @return {Boolean}               returns a boolean correspondent to the success of the copy operation.
+ * @see https://stackoverflow.com/a/53951634/938822
+ */
+export function copyToClipboard(string: string): boolean {
+  let textarea;
+  let result;
+
+  try {
+    textarea = document.createElement("textarea");
+    textarea.setAttribute("readonly", "true");
+    textarea.setAttribute("contenteditable", "true");
+    textarea.style.position = "fixed"; // prevent scroll from jumping to the bottom when focus is set.
+    textarea.value = string;
+
+    document.body.appendChild(textarea);
+
+    textarea.focus();
+    textarea.select();
+
+    const range = document.createRange();
+    range.selectNodeContents(textarea);
+
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    textarea.setSelectionRange(0, textarea.value.length);
+    result = document.execCommand("copy");
+  } catch (err) {
+    console.error(err);
+    result = null;
+  } finally {
+    if (textarea) {
+      document.body.removeChild(textarea);
+    }
+  }
+
+  // manual copy fallback using prompt
+  if (!result) {
+    const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+    const copyHotkey = isMac ? "⌘C" : "CTRL+C";
+    result = prompt(`Press ${copyHotkey}`, string); // eslint-disable-line no-alert
+    if (!result) {
+      return false;
+    }
+  }
+  return true;
 }
