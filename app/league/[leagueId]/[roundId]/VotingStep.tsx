@@ -5,6 +5,7 @@ import { useState, useMemo, useCallback, ChangeEvent } from "react";
 import { addVotes } from "@/app/utils/leagueUtils";
 import { useRouter } from "next/navigation";
 import Error from "../error";
+import { SubmitButton } from "@/app/components/SubmitButton";
 
 interface VotingStepClient {
   isDone: boolean;
@@ -15,7 +16,6 @@ interface VotingStepClient {
   isTwoPlayer: boolean;
   prompt: string;
   isLastPlayer: boolean;
-  playerId: string;
   leagueId: string;
   roundId: string;
 }
@@ -29,7 +29,6 @@ export function VotingStepClient({
   isTwoPlayer,
   prompt,
   isLastPlayer,
-  playerId,
   roundId,
   leagueId,
 }: VotingStepClient) {
@@ -38,6 +37,8 @@ export function VotingStepClient({
   const [upvotes, setUpvotes] = useState<number>(0);
   const [isDone, setIsDone] = useState<boolean>(isDoneFromServer);
   const [message, setMessage] = useState<string>("");
+  const [isSubmitting, setSubmitting] = useState(false);
+
   const router = useRouter();
 
   const [votes, setVotes] = useState<VotedSubmission[]>(
@@ -87,24 +88,31 @@ export function VotingStepClient({
     [currentIndex]
   );
 
-  const onSubmit = useCallback(async () => {
-    const { message, error } = await addVotes({
-      playerId,
-      roundId,
-      leagueId,
-      votedSubmissions: votes,
-    });
+  const onSubmit = useCallback(
+    async (e: React.FormEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      setSubmitting(true);
 
-    if (error) {
-      setMessage(message);
-    }
+      const { message, error } = await addVotes({
+        roundId,
+        leagueId,
+        votedSubmissions: votes,
+      });
 
-    setIsDone(true);
+      if (error) {
+        setMessage(message);
+        setSubmitting(false);
+        return;
+      }
 
-    if (isLastPlayer) {
-      router.refresh();
-    }
-  }, [isLastPlayer, leagueId, playerId, roundId, router, votes]);
+      setIsDone(true);
+
+      if (isLastPlayer) {
+        router.refresh();
+      }
+    },
+    [isLastPlayer, leagueId, roundId, router, votes]
+  );
 
   const remainingDownvotes = numberOfDownvotes - downvotes;
   const remainingUpvotes = numberOfUpvotes - upvotes;
@@ -202,13 +210,14 @@ export function VotingStepClient({
           </label>
           {isSubmittable && !isDone && (
             <div className='flex justify-center w-full'>
-              <button
-                className='disabled:text-transparent'
+              <SubmitButton
+                type='submit'
                 disabled={!isSubmittable}
+                loading={isSubmitting}
                 onClick={onSubmit}
               >
                 Submit
-              </button>
+              </SubmitButton>
             </div>
           )}
         </div>

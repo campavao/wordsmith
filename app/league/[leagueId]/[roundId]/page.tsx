@@ -70,8 +70,17 @@ export default async function Round({
     <div className='flex flex-col items-center gap-12'>
       <h1 className='h1 font-bold text-lg'>{league.config.name}</h1>
       <div className='max-w-lg w-full'>
-        {isWriting && <WritingStep {...params} />}
-        {isVoting && <VotingStep {...params} />}
+        {isWriting && (
+          <WritingStep
+            {...params}
+            player={user}
+            league={league}
+            round={round}
+          />
+        )}
+        {isVoting && (
+          <VotingStep {...params} player={user} league={league} round={round} />
+        )}
         {(isWriting || isVoting) && (
           <Footnote
             round={round}
@@ -82,7 +91,12 @@ export default async function Round({
         )}
         {isCompleted && (
           <>
-            <ReviewStep {...params} />
+            <ReviewStep
+              {...params}
+              player={user}
+              league={league}
+              round={round}
+            />
             {nextRoundId && (
               <Link
                 className='block w-full text-center p-1'

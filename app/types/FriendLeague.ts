@@ -10,7 +10,7 @@ export type RoundStatus =
   | "voting"
   | "completed";
 
-export interface Submission {
+export interface ServerSubmission {
   id: string;
   playerId: string;
   roundId: string;
@@ -18,16 +18,20 @@ export interface Submission {
   title: string;
 }
 
+export type Submission = Omit<ServerSubmission, "playerId">;
+
 export interface VotedSubmission {
   submissionId: string;
   score: number;
   comment: string;
 }
 
-export interface PlayerVote {
+export interface ServerPlayerVote {
   playerId: string;
   submissions: VotedSubmission[];
 }
+
+export type PlayerVote = Omit<ServerPlayerVote, "playerId">;
 
 export interface Round {
   id: string;
@@ -38,9 +42,9 @@ export interface Round {
   /** Current status of the round*/
   status: RoundStatus;
 
-  submissions: Submission[];
+  submissions: ServerSubmission[];
 
-  votes: PlayerVote[];
+  votes: ServerPlayerVote[];
 
   wordLimit: number;
 }
@@ -94,20 +98,20 @@ export const DEFAULT_PROMPTS: string[] = [
 
 export function getUpdatedRoundStatus(
   round: Round,
-  league: FriendLeague
+  maxPlayers: number
 ): RoundStatus {
   switch (round.status) {
     case "not started":
       return "in progress";
     case "in progress":
       // check submissions length to see if it'd be last
-      if (round.submissions.length === league.players.length) {
+      if (round.submissions.length === maxPlayers) {
         return "voting";
       }
       return "in progress";
     case "voting":
       // check votes length to see if it'd be last
-      if (round.votes.length === league.players.length) {
+      if (round.votes.length === maxPlayers) {
         return "completed";
       }
       return "voting";

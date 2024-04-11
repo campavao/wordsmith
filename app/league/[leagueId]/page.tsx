@@ -5,6 +5,7 @@ import { CopyLeagueId } from "../CopyLeagueId";
 import { getPlayer, getServerGame } from "@/app/api/apiUtils";
 import { Suspense } from "react";
 import Loading from "./loading";
+import { EnableNotifications } from "@/app/components/EnableNotifications";
 
 export default async function League({
   params,
@@ -94,6 +95,7 @@ export default async function League({
           </Link>
         )}
         <Link href={`/league/${params.leagueId}/results`}>Results</Link>
+        <EnableNotifications />
       </Suspense>
       <Link href='/'>Back home</Link>
     </div>

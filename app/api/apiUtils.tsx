@@ -1,4 +1,4 @@
-import getDocument, { getDocuments } from "./firebase/getData";
+import getDocument from "./firebase/getData";
 import {
   FriendLeague,
   getUpdatedRoundStatus,
@@ -8,11 +8,18 @@ import {
   PlayerVote,
   Submission,
 } from "../types/FriendLeague";
-import { getServerSession, Session } from "next-auth";
+import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
 import { redirect } from "next/navigation";
 import addData from "./firebase/addData";
-import { addToArray } from "./firebase/updateData";
+import { getDocuments } from "./firebase/get";
+import webpush from "web-push";
+
+webpush.setVapidDetails(
+  "mailto:cam9548@gmail.com",
+  process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY ?? "",
+  process.env.WEB_PUSH_PRIVATE_KEY ?? ""
+);
 import { getDocs } from "firebase/firestore";
 import { ServerSubmission } from "../profile/page";
 
@@ -77,29 +84,15 @@ interface AddSubmission {
 }
 
 export async function updateRoundForUser({
-  player,
   submission,
   playerVote,
   leagueId,
   roundId,
 }: AddSubmission): Promise<ServerResponse> {
   try {
-    const serverLeague = await getDocument("games", leagueId);
-    if (!serverLeague.exists()) {
-      return {
-        message: "game does not exist",
-        error: true,
-      };
-    }
-    const league = serverLeague.data() as FriendLeague;
-    const round = league.rounds.find((item) => item.id === roundId);
-
-    if (!round) {
-      return {
-        message: "round does not exist",
-        error: true,
-      };
-    }
+    const player = await getPlayer();
+    const league = await getLeague(leagueId);
+    const round = getRoundFromLeague(league, roundId);
 
     if (submission) {
       if (round.submissions.find((sub) => sub.playerId === player.id)) {
@@ -108,7 +101,7 @@ export async function updateRoundForUser({
           error: true,
         };
       }
-      round.submissions.push(submission);
+      round.submissions.push({ ...submission, playerId: player.id });
     }
 
     if (playerVote) {
@@ -118,10 +111,10 @@ export async function updateRoundForUser({
           error: true,
         };
       }
-      round.votes.push(playerVote);
+      round.votes.push({ ...playerVote, playerId: player.id });
     }
 
-    round.status = getUpdatedRoundStatus(round, league);
+    round.status = getUpdatedRoundStatus(round, league.players.length);
 
     const updatedLeague = {
       ...league,
@@ -132,7 +125,6 @@ export async function updateRoundForUser({
 
     return {
       message: "creating with firebase game",
-      data: league,
     };
   } catch (err) {
     throw new Error(err as string);
@@ -140,19 +132,67 @@ export async function updateRoundForUser({
 }
 
 export async function getSubmissions(playerId: string) {
-  const rawSubmissions = await getDocuments("submissions", {
-    fieldPath: "playerId",
-    opStr: "==",
-    value: playerId,
-  });
-
-  const submissions: ServerSubmission[] = [];
-
-  rawSubmissions.forEach((sub) => {
-    if (sub.exists()) {
-      submissions.push(sub.data() as ServerSubmission);
-    }
-  });
+  const submissions = await getDocuments<ServerSubmission>("submissions",
+    "playerId",
+    "==",
+    playerId,
+  );
 
   return submissions;
+}
+
+type PlayerSubscription = {
+  playerId: string;
+  subscription: webpush.PushSubscription;
+};
+
+export async function sendNotification(playerId: string, message: string) {
+  const subscriptions = await getDocuments<PlayerSubscription>(
+    "subscriptions",
+    "playerId",
+    "==",
+    playerId
+  );
+
+  try {
+    await Promise.all(
+      subscriptions.map(({ subscription }) =>
+        webpush.sendNotification(subscription, message)
+      )
+    );
+  } catch (err: any) {
+    console.error(err.body);
+  }
+}
+
+export async function getLeague(leagueId: LeagueId) {
+  const serverLeague = await getDocument("games", leagueId);
+  if (!serverLeague.exists()) {
+    redirect("/");
+  }
+  return serverLeague.data() as FriendLeague;
+}
+
+export async function getPlayers(leagueId: LeagueId) {
+  const league = await getLeague(leagueId);
+
+  return {
+    players: league.players,
+    leagueName: league.config.name,
+  };
+}
+
+export async function getRound(leagueId: LeagueId, roundId: string) {
+  const league = await getLeague(leagueId);
+  return getRoundFromLeague(league, roundId);
+}
+
+export function getRoundFromLeague(league: FriendLeague, roundId: string) {
+  const round = league.rounds.find((item) => item.id === roundId);
+
+  if (!round) {
+    redirect(`/league/${league.leagueId}`);
+  }
+
+  return round;
 }

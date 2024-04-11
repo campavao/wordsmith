@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Player, LeagueId } from "../types/FriendLeague";
 import { joinGame } from "../utils/leagueUtils";
 import { CreateGame } from "./CreateGame";
+import { SubmitButton } from "../components/SubmitButton";
 
 export function FriendLeagueClient({ player }: { player: Player }) {
   const [isCreating, setIsCreating] = useState<boolean>(false);
@@ -13,11 +14,11 @@ export function FriendLeagueClient({ player }: { player: Player }) {
   const cancelJoin = useCallback(() => setIsJoining(false), []);
 
   if (isJoining) {
-    return <Join player={player} cancel={cancelJoin} />;
+    return <Join cancel={cancelJoin} />;
   }
 
   if (isCreating) {
-    return <CreateGame player={player} cancel={cancelCreate} />;
+    return <CreateGame cancel={cancelCreate} />;
   }
 
   return (
@@ -30,12 +31,12 @@ export function FriendLeagueClient({ player }: { player: Player }) {
 
 export interface CreateOrJoinGame {
   cancel: () => void;
-  player: Player;
 }
 
-function Join({ cancel, player }: CreateOrJoinGame) {
+function Join({ cancel }: CreateOrJoinGame) {
   const router = useRouter();
   const [error, setError] = useState<string>();
+  const [isSubmitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<{ leagueId: LeagueId }>({
     leagueId: "",
@@ -52,19 +53,22 @@ function Join({ cancel, player }: CreateOrJoinGame) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
 
     try {
       const { error, message } = await joinGame({
-        player,
         leagueId: formData.leagueId,
       });
       if (error) {
         setError(message);
+        setSubmitting(false);
         return;
       }
       router.push(`/league/${formData.leagueId}`);
     } catch (err: any) {
-      throw new Error(err);
+      setSubmitting(false);
+      setError(err.message);
+      console.error(err);
     }
   };
 
@@ -83,7 +87,14 @@ function Join({ cancel, player }: CreateOrJoinGame) {
         className='border rounded-sm p-2 text-center text-black'
         id='league-code'
       />
-      <button type='submit'>Join</button>
+      <SubmitButton
+        className='w-28 self-center'
+        type='submit'
+        disabled={formData.leagueId === ""}
+        loading={isSubmitting}
+      >
+        Join
+      </SubmitButton>
       <button onClick={cancel}>Back</button>
     </form>
   );
