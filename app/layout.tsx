@@ -1,5 +1,7 @@
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
+
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { Libre_Baskerville } from "next/font/google";
 
@@ -23,6 +25,7 @@ export default async function RootLayout({
       <body className={libre.className}>
         <main className='m-8 sm:m-20'>{children}</main>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
