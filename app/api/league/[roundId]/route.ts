@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     }
   } catch (e) {
     console.error(e);
+    return Response.json({ error: "Something went wrong" });
   }
 
   if (game == null) {
@@ -46,5 +47,6 @@ export async function POST(
 ) {
   const { submission, playerVote, leagueId } = await request.json();
   const { roundId } = params;
+  console.log(submission, playerVote, leagueId, roundId);
   await updateRound({ roundId, submission, playerVote, leagueId });
 }

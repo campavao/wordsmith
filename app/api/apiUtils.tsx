@@ -287,6 +287,7 @@ export async function updateRound({
     if (round.status === "completed") {
       const isSomeoneSkipped = league.players.find((p) => p.isSkipped);
 
+      console.log("maybe skipping", isSomeoneSkipped);
       // Reset players if at least one is skipped
       if (isSomeoneSkipped) {
         league.players = league.players.map((p) => ({
@@ -307,7 +308,7 @@ export async function updateRound({
     });
   } catch (err) {
     console.log(err);
-    throw new Error(err as string);
+    return Response.json({ error: "Something went wrong" });
   }
 }
 

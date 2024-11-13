@@ -119,22 +119,29 @@ export function getUpdatedRoundStatus(
   round: Round,
   players: Player[]
 ): RoundStatus {
-  const maxPlayers = players.filter(
+  const activePlayers = players.filter(
     (player) => !player.isRemoved && !player.isSkipped
-  ).length;
+  );
+  const maxPlayers = activePlayers.length;
+
+  const playerIds = new Set(activePlayers.map((p) => p.id));
 
   switch (round.status) {
     case "not started":
       return "in progress";
     case "in progress":
+      const activeSubmissions = round.submissions.filter((s) =>
+        playerIds.has(s.playerId)
+      );
       // check submissions length to see if it'd be last
-      if (round.submissions.length === maxPlayers) {
+      if (activeSubmissions.length === maxPlayers) {
         return "voting";
       }
       return "in progress";
     case "voting":
+      const activeVotes = round.votes.filter((s) => playerIds.has(s.playerId));
       // check votes length to see if it'd be last
-      if (round.votes.length === maxPlayers) {
+      if (activeVotes.length === maxPlayers) {
         return "completed";
       }
       return "voting";
