@@ -1,6 +1,6 @@
 "use server";
-import { SharedStep } from "./WritingStepWrapper";
 import { VotingStepClient } from "./VotingStep";
+import { SharedStep } from "./WritingStepWrapper";
 
 export async function VotingStep({
   leagueId,
@@ -24,7 +24,12 @@ export async function VotingStep({
   const { numberOfDownvotes, numberOfUpvotes } = league.config;
 
   const isTwoPlayer = round.submissions.length <= 2;
-  const isLastPlayer = league.players.length - round.votes.length <= 1;
+  const activePlayers = league.players.filter(
+    (p) => !p.isRemoved && !p.isSkipped
+  );
+  const playerIds = new Set(activePlayers.map((p) => p.id));
+  const activeVotes = round.votes.filter((v) => playerIds.has(v.playerId));
+  const isLastPlayer = activePlayers.length - activeVotes.length <= 1;
 
   return (
     <VotingStepClient

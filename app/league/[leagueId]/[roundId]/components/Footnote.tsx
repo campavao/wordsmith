@@ -1,16 +1,24 @@
 import { FriendLeague, Player, Round } from "@/app/types/FriendLeague";
 import { useMemo } from "react";
+import { RemoveUser } from "../../RemoveUser";
 
 interface Footnote {
   round: Round;
   league: FriendLeague;
   action: string;
   isVoting: boolean;
+  isOwner?: boolean;
 }
 
 type PlayerMap = Record<string, Player>;
 
-export function Footnote({ round, league, action, isVoting }: Footnote) {
+export function Footnote({
+  round,
+  league,
+  action,
+  isVoting,
+  isOwner,
+}: Footnote) {
   const playerMap = useMemo<PlayerMap>(
     () =>
       league.players.reduce(
@@ -38,14 +46,38 @@ export function Footnote({ round, league, action, isVoting }: Footnote) {
         {list.map(({ playerId }) => {
           const player = playerMap[playerId];
           return (
-            <li key={playerId}>
-              {player.name} has {action}
+            <li
+              className={`flex flex-center gap-2 ${
+                player.isRemoved || player.isSkipped ? "line-through" : ""
+              }`}
+              key={playerId}
+            >
+              {player.name} has {action}{" "}
+              {isOwner && !player.isRemoved && !player.isSkipped && (
+                <RemoveUser
+                  playerEmail={player.email}
+                  leagueId={league.leagueId}
+                  type='skip'
+                />
+              )}
             </li>
           );
         })}
-        {waitingOnPlayers.map(({ name, id }) => (
-          <li key={id}>
-            {name} has not {action}
+        {waitingOnPlayers.map(({ name, id, isRemoved, isSkipped, email }) => (
+          <li
+            className={`flex flex-center gap-2 ${
+              isRemoved || isSkipped ? "line-through" : ""
+            }`}
+            key={id}
+          >
+            {name} has not {action}{" "}
+            {isOwner && !isRemoved && !isSkipped && (
+              <RemoveUser
+                playerEmail={email}
+                leagueId={league.leagueId}
+                type='skip'
+              />
+            )}
           </li>
         ))}
       </ol>

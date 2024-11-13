@@ -1,10 +1,10 @@
 "use server";
+import { getPlayer, getServerGame } from "@/app/api/apiUtils";
 import Link from "next/link";
 import { Footnote } from "./components/Footnote";
-import { getPlayer, getServerGame } from "@/app/api/apiUtils";
-import { WritingStep } from "./WritingStepWrapper";
-import { VotingStep } from "./VotingStepWrapper";
 import { ReviewStep } from "./ReviewStepWrapper";
+import { VotingStep } from "./VotingStepWrapper";
+import { WritingStep } from "./WritingStepWrapper";
 
 export default async function Round({
   params,
@@ -87,6 +87,7 @@ export default async function Round({
             league={league}
             action={isWriting ? "submitted" : "voted"}
             isVoting={isVoting}
+            isOwner={user.email === league.config.creator?.email}
           />
         )}
         {isCompleted && (

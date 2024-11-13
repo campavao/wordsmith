@@ -1,4 +1,6 @@
-import getDocument from "./firebase/getData";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import webpush from "web-push";
 import {
   FriendLeague,
   getUpdatedRoundStatus,
@@ -6,15 +8,15 @@ import {
   LeagueId,
   Player,
   PlayerVote,
+  RoundStatus,
+  ServerPlayerVote,
   ServerSubmission,
   Submission,
 } from "../types/FriendLeague";
-import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
-import { redirect } from "next/navigation";
 import addData from "./firebase/addData";
 import { getDocuments } from "./firebase/get";
-import webpush from "web-push";
+import getDocument from "./firebase/getData";
 
 webpush.setVapidDetails(
   "mailto:cam9548@gmail.com",
@@ -125,7 +127,7 @@ export async function updateRoundForUser({
       round.votes.push({ ...playerVote, playerId: player.id });
     }
 
-    round.status = getUpdatedRoundStatus(round, league.players.length);
+    round.status = getUpdatedRoundStatus(round, league.players);
 
     const updatedLeague = {
       ...league,
@@ -143,10 +145,11 @@ export async function updateRoundForUser({
 }
 
 export async function getSubmissions(playerId: string) {
-  const submissions = await getDocuments<ServerSubmission>("submissions",
+  const submissions = await getDocuments<ServerSubmission>(
+    "submissions",
     "playerId",
     "==",
-    playerId,
+    playerId
   );
 
   return submissions;
@@ -206,4 +209,148 @@ export function getRoundFromLeague(league: FriendLeague, roundId: string) {
   }
 
   return round;
+}
+
+interface UpdateRound {
+  roundId: string;
+  submission?: Submission;
+  playerVote?: PlayerVote;
+  leagueId: string;
+}
+
+export async function updateRound({
+  roundId,
+  submission,
+  playerVote,
+  leagueId,
+}: UpdateRound) {
+  const player = await getPlayer();
+  const league = await getLeague(leagueId);
+  const round = getRoundFromLeague(league, roundId);
+
+  try {
+    if (submission) {
+      if (round.submissions.find((sub) => sub.playerId === player.id)) {
+        return Response.json({
+          message: "already submitted",
+          error: true,
+        });
+      }
+      const serverSubmission = {
+        ...submission,
+        playerId: player.id,
+      };
+
+      // dual write to new submission tables
+      await addData("submissions", submission.id, {
+        ...serverSubmission,
+        config: {
+          leagueId,
+          leagueName: league.config.name,
+          roundPrompt: round.prompt,
+        },
+      });
+
+      const newSubmissions = [...round.submissions, serverSubmission];
+      round.submissions = newSubmissions;
+      const lastPlayerId = getLastPlayer(newSubmissions, league.players);
+      if (lastPlayerId) {
+        await sendNotification(
+          lastPlayerId,
+          `You're the last to submit for ${league.config.name}!`
+        );
+      }
+    }
+
+    if (playerVote) {
+      if (round.votes.find((sub) => sub.playerId === player.id)) {
+        return Response.json({
+          message: "already voted",
+          error: true,
+        });
+      }
+      const voteWithId = { ...playerVote, playerId: player.id };
+      const newVotes = [...round.votes, voteWithId];
+      round.votes = newVotes;
+      const lastPlayerId = getLastPlayer(newVotes, league.players);
+      if (lastPlayerId) {
+        await sendNotification(
+          lastPlayerId,
+          `You're the last to vote for ${league.config.name}!`
+        );
+      }
+    }
+
+    const prevStatus = round.status;
+    round.status = getUpdatedRoundStatus(round, league.players);
+
+    if (round.status === "completed") {
+      const isSomeoneSkipped = league.players.find((p) => p.isSkipped);
+
+      // Reset players if at least one is skipped
+      if (isSomeoneSkipped) {
+        league.players = league.players.map((p) => ({
+          ...p,
+          isSkipped: false,
+        }));
+      }
+    }
+
+    if (prevStatus !== round.status) {
+      sendRoundChangeNotifications(player.id, league, round.status);
+    }
+
+    await addData("games", leagueId, league);
+
+    return Response.json({
+      message: "submission successful",
+    });
+  } catch (err) {
+    console.log(err);
+    throw new Error(err as string);
+  }
+}
+
+export async function sendRoundChangeNotifications(
+  playerId: string,
+  league: FriendLeague,
+  status: RoundStatus
+) {
+  const listWithoutCurrPlayer = league.players.filter((p) => p.id !== playerId);
+  let message: string | undefined;
+
+  switch (status) {
+    case "voting":
+      message = `Voting has started for ${league.config.name}.`;
+      break;
+    case "completed":
+      message = `The round has completed for ${league.config.name}. Check and see how you did!`;
+      break;
+    case "in progress":
+      message = `The game has started for ${league.config.name}!`;
+      break;
+  }
+
+  if (!message) {
+    return;
+  }
+
+  await Promise.all(
+    listWithoutCurrPlayer.map((player) => sendNotification(player.id, message!))
+  );
+}
+
+export function getLastPlayer(
+  list:
+    | Pick<ServerSubmission, "playerId">[]
+    | Pick<ServerPlayerVote, "playerId">[],
+  players: Player[]
+) {
+  const listIds = list.map((l) => l.playerId);
+  const playersLeft = players.filter(
+    (p) => !listIds.includes(p.id) && !p.isRemoved && !p.isSkipped
+  );
+  if (playersLeft.length === 1) {
+    return playersLeft.at(0)?.id;
+  }
 }

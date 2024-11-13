@@ -11,6 +11,11 @@ export function Login({ isSignout }: { isSignout?: boolean }) {
   };
 
   return (
-    <button onClick={handleLogin}>{isSignout ? "Sign out" : "Login"}</button>
+    <button
+      className='p-4 bg-black rounded text-white w-40'
+      onClick={handleLogin}
+    >
+      {isSignout ? "Sign out" : "Login"}
+    </button>
   );
 }

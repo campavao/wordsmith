@@ -1,11 +1,12 @@
 "use server";
+import { getPlayer, getServerGame } from "@/app/api/apiUtils";
+import { EnableNotifications } from "@/app/components/EnableNotifications";
 import { LeagueId, Round } from "@/app/types/FriendLeague";
 import Link from "next/link";
-import { CopyLeagueId } from "../CopyLeagueId";
-import { getPlayer, getServerGame } from "@/app/api/apiUtils";
 import { Suspense } from "react";
+import { CopyLeagueId } from "../CopyLeagueId";
 import Loading from "./loading";
-import { EnableNotifications } from "@/app/components/EnableNotifications";
+import { RemoveUser } from "./RemoveUser";
 
 export default async function League({
   params,
@@ -53,6 +54,8 @@ export default async function League({
     }
   }
 
+  const isOwner = league?.config?.creator?.email === player.email;
+
   return (
     <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
       <CopyLeagueId leagueId={params.leagueId} />
@@ -68,10 +71,21 @@ export default async function League({
               <p>Authors</p>
               {league.players.map((player, key) => (
                 <li key={player.name + key} title={player.email}>
-                  <p className='flex gap-2'>
+                  <p
+                    className={`flex gap-2 ${
+                      player.isRemoved ? "line-through" : ""
+                    }`}
+                  >
                     {player.name}
                     {league.config.creator?.email === player.email && (
                       <CrownIcon />
+                    )}
+                    {isOwner && !player.isRemoved && (
+                      <RemoveUser
+                        playerEmail={player.email}
+                        leagueId={league.leagueId}
+                        type='remove'
+                      />
                     )}
                   </p>
                 </li>

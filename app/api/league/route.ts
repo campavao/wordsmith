@@ -1,14 +1,9 @@
-import {
-  DEFAULT_ROUND,
-  FriendLeague,
-  Player,
-  Round,
-} from "@/app/types/FriendLeague";
 import { Prompt } from "@/app/friendLeague/CreateGame";
+import { DEFAULT_ROUND, FriendLeague, Round } from "@/app/types/FriendLeague";
+import { getPlayer, updateRound } from "../apiUtils";
 import addData from "../firebase/addData";
 import getDoc from "../firebase/getData";
 import { addToArray } from "../firebase/updateData";
-import { getPlayer } from "../apiUtils";
 
 // Get game
 export async function GET(request: Request) {
@@ -178,4 +173,68 @@ function isLeagueValid(league: FriendLeague) {
       (round) => round.wordLimit < 1001 && round.wordLimit > 0
     )
   );
+}
+
+export async function PATCH(request: Request) {
+  // Your server-side logic here
+  const data = await request.json();
+  const player = await getPlayer();
+
+  // if specified but no game found, errors
+  const { leagueId, playerEmail, type } = data;
+
+  // find game
+  try {
+    const document = await getDoc("games", leagueId);
+    const game = document.data() as FriendLeague | undefined;
+
+    // Game isn't found
+    if (game == null) {
+      return Response.json({ message: "league id isn't valid", error: true });
+    }
+
+    const playerToUpdate = game.players.find((p) => p.email === playerEmail);
+
+    // Player isn't found
+    if (playerToUpdate == null) {
+      return Response.json({ message: "player not found", data: game });
+    }
+
+    // Prevent non-creators from updating other players in a game
+    if (player.email !== game.config.creator?.email) {
+      return Response.json({ message: "restricted", data: game });
+    }
+
+    const updatedPlayers = game.players.filter((p) => p.email !== playerEmail);
+
+    const league: FriendLeague = {
+      ...game,
+      players: [
+        ...updatedPlayers,
+        {
+          ...playerToUpdate,
+          isSkipped: type === "skip",
+          isRemoved: type === "remove",
+        },
+      ],
+    };
+
+    await addData("games", leagueId, league);
+
+    const roundId = league.rounds.find(
+      (round) => round.status !== "completed"
+    )?.id;
+
+    // Trigger update on any active rounds
+    if (roundId) {
+      await updateRound({ roundId, leagueId });
+    }
+
+    return Response.json({
+      message: "player updated",
+    });
+  } catch (e) {
+    console.error(e);
+    return Response.json({ message: "server error", error: true });
+  }
 }

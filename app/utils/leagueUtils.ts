@@ -1,11 +1,12 @@
 "client only";
+import { Prompt } from "../friendLeague/CreateGame";
+import { UpdateUser } from "../league/[leagueId]/RemoveUser";
 import {
   LeagueId,
   PlayerVote,
   Submission,
   VotedSubmission,
 } from "../types/FriendLeague";
-import { Prompt } from "../friendLeague/CreateGame";
 
 export async function getGame({ leagueId }: JoinGame) {
   if (!leagueId) {
@@ -29,6 +30,18 @@ export async function joinGame({ leagueId }: JoinGame) {
   const response = await fetch(`/api/league`, {
     method: "PUT",
     body: JSON.stringify({ leagueId }),
+  });
+
+  return response.json();
+}
+
+export async function updatePlayerInLeague(props: UpdateUser) {
+  if (!props.leagueId) {
+    throw new Error("No leagueId supplied");
+  }
+  const response = await fetch(`/api/league`, {
+    method: "PATCH",
+    body: JSON.stringify(props),
   });
 
   return response.json();

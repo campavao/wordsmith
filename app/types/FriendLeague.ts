@@ -2,6 +2,10 @@ export interface Player {
   id: string;
   name: string;
   email: string;
+
+  // Will maybe be populated on a league
+  isSkipped?: boolean;
+  isRemoved?: boolean;
 }
 
 export type RoundStatus =
@@ -113,8 +117,12 @@ export const DEFAULT_PROMPTS: string[] = [
 
 export function getUpdatedRoundStatus(
   round: Round,
-  maxPlayers: number
+  players: Player[]
 ): RoundStatus {
+  const maxPlayers = players.filter(
+    (player) => !player.isRemoved && !player.isSkipped
+  ).length;
+
   switch (round.status) {
     case "not started":
       return "in progress";
@@ -135,7 +143,10 @@ export function getUpdatedRoundStatus(
   }
 }
 
-export const getNextRound = (league: FriendLeague, currentRoundId: string): string | undefined => {
+export const getNextRound = (
+  league: FriendLeague,
+  currentRoundId: string
+): string | undefined => {
   if (league?.rounds) {
     const currentIndex = league.rounds.findIndex(
       ({ id }) => id === currentRoundId
@@ -145,4 +156,4 @@ export const getNextRound = (league: FriendLeague, currentRoundId: string): stri
       return league.rounds[currentIndex + 1].id;
     }
   }
-}
+};
