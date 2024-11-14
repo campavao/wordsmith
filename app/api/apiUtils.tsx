@@ -231,10 +231,10 @@ export async function updateRound({
   try {
     if (submission) {
       if (round.submissions.find((sub) => sub.playerId === player.id)) {
-        return Response.json({
+        return {
           message: "already submitted",
           error: true,
-        });
+        };
       }
       const serverSubmission = {
         ...submission,
@@ -264,10 +264,10 @@ export async function updateRound({
 
     if (playerVote) {
       if (round.votes.find((sub) => sub.playerId === player.id)) {
-        return Response.json({
+        return {
           message: "already voted",
           error: true,
-        });
+        };
       }
       const voteWithId = { ...playerVote, playerId: player.id };
       const newVotes = [...round.votes, voteWithId];
@@ -303,12 +303,12 @@ export async function updateRound({
 
     await addData("games", leagueId, league);
 
-    return Response.json({
+    return {
       message: "submission successful",
-    });
+    };
   } catch (err) {
     console.log(err);
-    return Response.json({ error: "Something went wrong" });
+    return { error: "Something went wrong" };
   }
 }
 

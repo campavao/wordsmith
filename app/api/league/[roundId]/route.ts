@@ -47,6 +47,12 @@ export async function POST(
 ) {
   const { submission, playerVote, leagueId } = await request.json();
   const { roundId } = params;
-  console.log(submission, playerVote, leagueId, roundId);
-  await updateRound({ roundId, submission, playerVote, leagueId });
+  const result = await updateRound({
+    roundId,
+    submission,
+    playerVote,
+    leagueId,
+  });
+
+  return Response.json(result);
 }

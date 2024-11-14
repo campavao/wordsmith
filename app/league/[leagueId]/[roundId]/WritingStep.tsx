@@ -1,21 +1,23 @@
 "use client";
 import {
-  useState,
-  useCallback,
-  useRef,
-  Ref,
   FormEvent,
   MouseEventHandler,
+  Ref,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
+import { v4 as uuid } from "uuid";
 import { Preview } from "./components/Preview";
 import { ReactQuill, writingModules } from "./components/Quill";
-import { v4 as uuid } from "uuid";
 
-import { Sources } from "quill";
-import { UnprivilegedEditor } from "react-quill";
+import { SubmitButton } from "@/app/components/SubmitButton";
+import { useLocalStorage } from "@/app/hooks/useLocalStorage";
 import { addSubmission } from "@/app/utils/leagueUtils";
 import { useRouter } from "next/navigation";
-import { SubmitButton } from "@/app/components/SubmitButton";
+import { Sources } from "quill";
+import { UnprivilegedEditor } from "react-quill";
 import Error from "../error";
 
 interface WritingStepClient {
@@ -37,13 +39,17 @@ export function WritingStepClient({
   foundText,
   foundTitle,
 }: WritingStepClient) {
+  const [storedText, setStoredText] = useLocalStorage(
+    `writing.submission.${roundId}`,
+    foundText ?? ""
+  );
   const [readyToSubmit, setReadyToSubmit] = useState<boolean>(false);
-  const [text, setText] = useState<string>(foundText ?? "");
-  const [wordCount, setWordCount] = useState<number>(0);
+  const [text, setText] = useState<string>(storedText ?? foundText ?? "");
   const [title, setTitle] = useState<string>(foundTitle ?? "");
   const [isDone, setIsDone] = useState<boolean>(!!foundText && !!foundTitle);
   const [isSubmitting, setSubmitting] = useState(false);
   const [error, setError] = useState();
+  const [wordCount, setWordCount] = useState<number>(0);
 
   const escapeButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
@@ -64,6 +70,7 @@ export function WritingStepClient({
         });
 
         setIsDone(true);
+        setStoredText(null);
 
         if (isLastPlayer) {
           router.refresh();
@@ -74,7 +81,7 @@ export function WritingStepClient({
         setError(e.message);
       }
     },
-    [roundId, text, title, leagueId, isLastPlayer, router]
+    [roundId, text, title, leagueId, setStoredText, isLastPlayer, router]
   );
 
   const onTyping = useCallback(
@@ -82,21 +89,17 @@ export function WritingStepClient({
       text: string,
       _delta: unknown,
       _source: Sources,
-      editor: UnprivilegedEditor
+      _editor: UnprivilegedEditor
     ) => {
       setText(text);
-
-      const editorWordCount = editor
-        .getText()
-        .split(" ") // remove spaces
-        .flatMap((word) => word.split("\n")) // remove new lines
-        .flatMap((word) => word.split("\t")) // remove tabs
-        .filter((word) => word !== "" && word !== "\n");
-
-      setWordCount(editorWordCount.length);
+      setStoredText(text);
     },
-    []
+    [setStoredText]
   );
+
+  useEffect(() => {
+    setWordCount(getWordCount(text));
+  }, [text]);
 
   if (isDone) {
     return (
@@ -204,4 +207,12 @@ function Footer({
       </SubmitButton>
     </div>
   );
+}
+
+function getWordCount(text: string) {
+  return text
+    .split(" ") // remove spaces
+    .flatMap((word) => word.split("\n")) // remove new lines
+    .flatMap((word) => word.split("\t")) // remove tabs
+    .filter((word) => word !== "" && word !== "\n").length;
 }
