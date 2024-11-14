@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getPlayer, getSubmissions } from "../api/apiUtils";
+import { BackButton } from "../components/BackButton";
 
 export default async function Submissions() {
   const player = await getPlayer();
@@ -18,7 +19,7 @@ export default async function Submissions() {
   }
 
   return (
-    <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
+    <div className='flex flex-col justify-center lg:items-center h-[90%] gap-8'>
       <h1 className='font-bold text-4xl'>Personal Works</h1>
       <h2 className='text-lg text-gray-700'>Your past submissions</h2>
       <ul className='flex flex-col items-start gap-4 w-full lg:w-[400px]'>
@@ -34,7 +35,7 @@ export default async function Submissions() {
           </li>
         ))}
       </ul>
-      <Link href='/'>Back home</Link>
+      <BackButton />
     </div>
   );
 }
