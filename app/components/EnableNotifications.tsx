@@ -46,7 +46,14 @@ export function EnableNotifications() {
     return null;
   }
 
-  return <button onClick={onClick}>Enable notifications</button>;
+  return (
+    <button
+      className='font-bold text-xl text-left text-blue-600'
+      onClick={onClick}
+    >
+      Enable notifications
+    </button>
+  );
 }
 
 const checkPermission = () => {

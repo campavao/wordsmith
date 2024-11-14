@@ -2,10 +2,7 @@
 import { useState } from "react";
 import { Preview } from "./components/Preview";
 
-import {
-  Comment,
-  ReviewSubmissionWithRank,
-} from "./ReviewStepWrapper";
+import { Comment, ReviewSubmissionWithRank } from "./ReviewStepWrapper";
 
 interface ReviewStepClient {
   reviewSubmissions: ReviewSubmissionWithRank[];

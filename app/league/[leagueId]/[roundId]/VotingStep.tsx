@@ -1,11 +1,11 @@
 "use client";
+import { SubmitButton } from "@/app/components/SubmitButton";
 import { Submission, VotedSubmission } from "@/app/types/FriendLeague";
-import { Preview } from "./components/Preview";
-import { useState, useMemo, useCallback, ChangeEvent } from "react";
 import { addVotes } from "@/app/utils/leagueUtils";
 import { useRouter } from "next/navigation";
+import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import Error from "../error";
-import { SubmitButton } from "@/app/components/SubmitButton";
+import { Preview } from "./components/Preview";
 
 interface VotingStepClient {
   isDone: boolean;
@@ -138,7 +138,7 @@ export function VotingStepClient({
 
   return (
     <div className='flex flex-col items-center'>
-      <blockquote className='max-w-lg italic p-5'>
+      <blockquote className='max-w-lg italic'>
         <p>{prompt}</p>
       </blockquote>
 

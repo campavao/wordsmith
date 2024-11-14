@@ -67,8 +67,8 @@ export default async function Round({
   const isCompleted = round?.status === "completed";
 
   return (
-    <div className='flex flex-col items-center gap-12'>
-      <h1 className='h1 font-bold text-lg'>{league.config.name}</h1>
+    <div className='flex flex-col items-center gap-6'>
+      <h1 className='h1 font-bold text-4xl'>{league.config.name}</h1>
       <div className='max-w-lg w-full'>
         {isWriting && (
           <WritingStep

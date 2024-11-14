@@ -30,7 +30,7 @@ async function Home() {
                   href='/friendLeague/join'
                 >
                   Join league
-                  <span className='repeating-dots'></span> 2
+                  <span className='repeating-dots'></span> 13
                 </Link>
               </li>
               <li className='w-full'>
@@ -39,7 +39,7 @@ async function Home() {
                   href='/history'
                 >
                   History
-                  <span className='repeating-dots'></span> 3
+                  <span className='repeating-dots'></span> 27
                 </Link>
               </li>
               {/* <li>
@@ -51,7 +51,7 @@ async function Home() {
                   href='/submissions'
                 >
                   Written by me
-                  <span className='repeating-dots'></span> 4
+                  <span className='repeating-dots'></span> 48
                 </Link>
               </li>
               <li className='w-full'>
@@ -60,14 +60,14 @@ async function Home() {
                   href='/profile'
                 >
                   Profile
-                  <span className='repeating-dots'></span> 5
+                  <span className='repeating-dots'></span> 95
                 </Link>
               </li>
 
               <li className='w-full'>
                 <SignOut className='w-full flex flex-between items-end gap-1'>
                   Sign out
-                  <span className='repeating-dots'></span> 6
+                  <span className='repeating-dots'></span> 100
                 </SignOut>
               </li>
             </ol>

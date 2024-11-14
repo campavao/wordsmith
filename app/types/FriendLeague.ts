@@ -25,6 +25,7 @@ export interface ServerSubmission {
     leagueName: string;
     roundPrompt: string;
   };
+  createdAt?: string;
 }
 
 export type Submission = Omit<ServerSubmission, "playerId">;

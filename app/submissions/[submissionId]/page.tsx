@@ -1,11 +1,11 @@
 "use server";
+import { getPlayerFromId } from "@/app/api/apiUtils";
+import { getDocuments } from "@/app/api/firebase/get";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import getDocument from "../../api/firebase/getData";
 import { Preview } from "../../league/[leagueId]/[roundId]/components/Preview";
 import { ServerSubmission } from "../../types/FriendLeague";
-import { getPlayerFromId } from "@/app/api/apiUtils";
-import Link from "next/link";
-import { getDocuments } from "@/app/api/firebase/get";
 import { ShareButton } from "../ShareButton";
 
 export default async function SubmissionPage({
@@ -39,7 +39,7 @@ export default async function SubmissionPage({
 
   return (
     <div className='w-full flex flex-col items-center'>
-      <blockquote className='max-w-lg italic p-5'>
+      <blockquote className='max-w-lg italic'>
         <p>{submission.config?.roundPrompt}</p>
       </blockquote>
       <div className='border-b w-10 my-5 self-center'></div>

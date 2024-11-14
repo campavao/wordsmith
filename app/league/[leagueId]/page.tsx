@@ -1,5 +1,6 @@
 "use server";
 import { getPlayer, getServerGame } from "@/app/api/apiUtils";
+import { BackButton } from "@/app/components/BackButton";
 import { EnableNotifications } from "@/app/components/EnableNotifications";
 import { LeagueId, Round } from "@/app/types/FriendLeague";
 import Link from "next/link";
@@ -57,18 +58,33 @@ export default async function League({
   const isOwner = league?.config?.creator?.email === player.email;
 
   return (
-    <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
-      <CopyLeagueId leagueId={params.leagueId} />
+    <div className='flex flex-col justify-center h-[90%] gap-6'>
+      <div className='flex flex-col gap-4'>
+        <h1 className='font-bold text-4xl'>{league?.config.name}</h1>
+        <CopyLeagueId leagueId={params.leagueId} />
+      </div>
       <Suspense fallback={<Loading />}>
         {league == null || error ? (
           <p className='text-red-500'>{error ?? "Game not found"}</p>
         ) : (
-          <div className='flex flex-col justify-center items-center gap-8 '>
-            <h1 className='font-bold text-lg underline'>
-              {league.config.name}
-            </h1>
-            <ol className='w-[300px] list-decimal'>
-              <p>Authors</p>
+          <>
+            {roundId && (
+              <Link
+                className='font-bold text-2xl'
+                href={`/league/${params.leagueId}/${roundId}`}
+              >
+                {isStarted ? "Continue" : "Start"}
+              </Link>
+            )}
+            <Link
+              className='font-bold text-xl text-gray-700'
+              href={`/league/${params.leagueId}/results`}
+            >
+              Results
+            </Link>
+            <EnableNotifications />
+            <h2 className='font-bold text-2xl'>Authors</h2>
+            <ol className='list-decimal'>
               {league.players.map((player, key) => (
                 <li key={player.name + key} title={player.email}>
                   <p
@@ -92,8 +108,8 @@ export default async function League({
               ))}
             </ol>
             {league.rounds.find(isRoundStarted) && (
-              <ol className='flex flex-col gap-4 w-full max-w-[700px] list-decimal'>
-                <p>Rounds</p>
+              <ol className='flex flex-col gap-4 items-start list-decimal'>
+                <h2 className='font-bold text-2xl'>Rounds</h2>
                 {league.rounds.filter(isRoundStarted).map((round) => (
                   <li key={round.id}>
                     <RoundCard round={round} leagueId={params.leagueId} />
@@ -101,17 +117,10 @@ export default async function League({
                 ))}
               </ol>
             )}
-          </div>
+          </>
         )}
-        {roundId && (
-          <Link href={`/league/${params.leagueId}/${roundId}`}>
-            {isStarted ? "Continue" : "Start"}
-          </Link>
-        )}
-        <Link href={`/league/${params.leagueId}/results`}>Results</Link>
-        <EnableNotifications />
       </Suspense>
-      <Link href='/'>Back home</Link>
+      <BackButton />
     </div>
   );
 }
@@ -124,7 +133,7 @@ function RoundCard({ round, leagueId }: { round: Round; leagueId: LeagueId }) {
   return (
     <Link
       href={`/league/${leagueId}/${round.id}`}
-      className='flex flex-col justify-center items-center gap-8 w-full p-4 rounded border-black'
+      className='flex flex-col justify-center items-center gap-8 w-full rounded border-black'
     >
       {round.prompt}
     </Link>

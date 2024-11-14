@@ -244,6 +244,7 @@ export async function updateRound({
       // dual write to new submission tables
       await addData("submissions", submission.id, {
         ...serverSubmission,
+        createdAt: new Date().toISOString(),
         config: {
           leagueId,
           leagueName: league.config.name,

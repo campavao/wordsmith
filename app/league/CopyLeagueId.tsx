@@ -12,7 +12,7 @@ export function CopyLeagueId({ leagueId }: { leagueId: LeagueId }) {
   }, [leagueId]);
 
   return (
-    <p>
+    <p className='flex gap-2'>
       League ID:{" "}
       <button className='text-bold flex gap-2' onClick={copyLeagueId}>
         {leagueId} {copied ? <CheckIcon /> : <CopyIcon />}

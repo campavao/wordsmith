@@ -105,7 +105,7 @@ export function WritingStepClient({
     return (
       <div className='flex flex-col items-center'>
         {prompt && (
-          <blockquote className='max-w-lg p-5'>
+          <blockquote className='max-w-lg'>
             <p>{prompt}</p>
           </blockquote>
         )}
@@ -126,7 +126,7 @@ export function WritingStepClient({
   return (
     <div className='flex flex-col items-center'>
       {prompt && (
-        <blockquote className='max-w-lg p-5 italic text-sm'>
+        <blockquote className='max-w-lg italic text-sm'>
           <p>{prompt}</p>
         </blockquote>
       )}
