@@ -1,5 +1,6 @@
 "use client";
 import { signIn, signOut } from "next-auth/react";
+import { ReactNode } from "react";
 
 export function Login({ isSignout }: { isSignout?: boolean }) {
   const handleLogin = async () => {
@@ -16,6 +17,20 @@ export function Login({ isSignout }: { isSignout?: boolean }) {
       onClick={handleLogin}
     >
       {isSignout ? "Sign out" : "Login"}
+    </button>
+  );
+}
+
+export function SignOut({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <button className={className} onClick={() => signOut()}>
+      {children}
     </button>
   );
 }

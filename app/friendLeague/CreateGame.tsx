@@ -1,23 +1,23 @@
-import { v4 as uuid } from "uuid";
+"use client";
+import { useRouter } from "next/navigation";
 import {
   ChangeEvent,
-  useCallback,
-  useState,
   FormEvent,
   MouseEvent,
-  useRef,
+  useCallback,
   useMemo,
+  useRef,
+  useState,
 } from "react";
+import { v4 as uuid } from "uuid";
+import { SubmitButton } from "../components/SubmitButton";
+import Error from "../league/[leagueId]/error";
+import { DEFAULT_PROMPTS } from "../types/FriendLeague";
 import {
   createGame,
   CreateGamePayload,
   createLeagueId,
 } from "../utils/leagueUtils";
-import { DEFAULT_PROMPTS } from "../types/FriendLeague";
-import { useRouter } from "next/navigation";
-import { CreateOrJoinGame } from "./FriendLeagueClient";
-import Error from "../league/[leagueId]/error";
-import { SubmitButton } from "../components/SubmitButton";
 
 interface CreateGameForm {
   leagueName: { value: string };
@@ -26,7 +26,7 @@ interface CreateGameForm {
   prompts: HTMLInputElement[];
 }
 
-export function CreateGame({ cancel }: CreateOrJoinGame) {
+export function CreateGame() {
   const router = useRouter();
   const imageRef = useRef<HTMLImageElement>(null);
   const leagueId = useMemo(() => createLeagueId(5), []);
@@ -169,9 +169,6 @@ export function CreateGame({ cancel }: CreateOrJoinGame) {
         >
           Submit
         </SubmitButton>
-        <button className='w-28 self-center' onClick={cancel}>
-          Back
-        </button>
       </form>
     </div>
   );

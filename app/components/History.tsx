@@ -22,13 +22,10 @@ export async function History() {
   }
 
   return (
-    <div
-      className='flex flex-col lg:items-center gap-4'
-      suppressHydrationWarning
-    >
+    <div className='flex flex-col gap-4' suppressHydrationWarning>
       <h1 className='font-bold text-4xl'>History</h1>
-      <h2 className='text-lg text-gray-700'>Your personal chapters</h2>
-      <ul className='flex flex-col items-start gap-4 w-full lg:w-[400px]'>
+      <h2 className='text-lg text-gray-700 '>Your personal chapters</h2>
+      <ul className='flex flex-col items-start gap-4 w-full'>
         {player.history.map(
           (data: { name: string; leagueId: string }, index: number) => {
             return (

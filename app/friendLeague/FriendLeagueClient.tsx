@@ -1,25 +1,16 @@
 "use client";
-import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Player, LeagueId } from "../types/FriendLeague";
-import { joinGame } from "../utils/leagueUtils";
-import { CreateGame } from "./CreateGame";
+import { useCallback, useState } from "react";
 import { SubmitButton } from "../components/SubmitButton";
+import { LeagueId } from "../types/FriendLeague";
+import { joinGame } from "../utils/leagueUtils";
 
-export function FriendLeagueClient({ player }: { player: Player }) {
+export function FriendLeagueClient() {
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isJoining, setIsJoining] = useState<boolean>(false);
 
   const cancelCreate = useCallback(() => setIsCreating(false), []);
   const cancelJoin = useCallback(() => setIsJoining(false), []);
-
-  if (isJoining) {
-    return <Join cancel={cancelJoin} />;
-  }
-
-  if (isCreating) {
-    return <CreateGame cancel={cancelCreate} />;
-  }
 
   return (
     <>
@@ -29,11 +20,7 @@ export function FriendLeagueClient({ player }: { player: Player }) {
   );
 }
 
-export interface CreateOrJoinGame {
-  cancel: () => void;
-}
-
-function Join({ cancel }: CreateOrJoinGame) {
+export function Join() {
   const router = useRouter();
   const [error, setError] = useState<string>();
   const [isSubmitting, setSubmitting] = useState(false);
@@ -95,7 +82,6 @@ function Join({ cancel }: CreateOrJoinGame) {
       >
         Join
       </SubmitButton>
-      <button onClick={cancel}>Back</button>
     </form>
   );
 }
