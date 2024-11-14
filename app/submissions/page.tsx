@@ -19,12 +19,21 @@ export default async function Submissions() {
 
   return (
     <div className='flex flex-col justify-center items-center h-[90%] gap-8'>
-      <span>Previous Submissions:</span>
-      {submissions.map((sub, index) => (
-        <Link key={index} href={`/submissions/${sub.id}`}>
-          <span className='text-md font-bold'>{sub.title}</span>
-        </Link>
-      ))}
+      <h1 className='font-bold text-4xl'>Personal Works</h1>
+      <h2 className='text-lg text-gray-700'>Your past submissions</h2>
+      <ul className='flex flex-col items-start gap-4 w-[400px]'>
+        {submissions.map((sub, index) => (
+          <li key={index} className='w-full'>
+            <Link
+              href={`/submissions/${sub.id}`}
+              className='w-full flex flex-between items-end gap-1'
+            >
+              {sub.title} <span className='repeating-dots'></span>
+              {index + 1}
+            </Link>
+          </li>
+        ))}
+      </ul>
       <Link href='/'>Back home</Link>
     </div>
   );

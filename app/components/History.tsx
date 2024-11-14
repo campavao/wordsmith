@@ -1,8 +1,8 @@
 "server only";
-import Link from "next/link";
 import { getServerSession } from "next-auth/next";
-import getDocument from "../api/firebase/getData";
+import Link from "next/link";
 import { authOptions } from "../api/auth";
+import getDocument from "../api/firebase/getData";
 
 export async function History() {
   const session = await getServerSession(authOptions);
@@ -22,15 +22,25 @@ export async function History() {
   }
 
   return (
-    <div className='border-t' suppressHydrationWarning>
-      <p className='underline p-5 text-center'>History</p>
-      <ul className='flex flex-col items-center gap-4'>
+    <div className='flex flex-col items-center gap-4' suppressHydrationWarning>
+      <h1 className='font-bold text-4xl'>History</h1>
+      <h2 className='text-lg text-gray-700'>Your personal chapters</h2>
+      <ul className='flex flex-col items-start gap-4 w-[400px]'>
         {player.history.map(
-          (data: { name: string; leagueId: string }, key: string) => (
-            <li key={"history-" + key}>
-              <Link href={`/league/${data.leagueId}`}>{data.name}</Link>
-            </li>
-          )
+          (data: { name: string; leagueId: string }, index: number) => {
+            return (
+              <li className='w-full' key={"history-" + index}>
+                <Link
+                  href={`/league/${data.leagueId}`}
+                  className='flex flex-between items-end w-full gap-1'
+                >
+                  <span className='whitespace-nowrap'>{data.name}</span>
+                  <span className='repeating-dots'></span>
+                  <span className=''>{index + 1}</span>
+                </Link>
+              </li>
+            );
+          }
         )}
       </ul>
     </div>

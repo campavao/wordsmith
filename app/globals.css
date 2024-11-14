@@ -42,3 +42,11 @@ body {
 .ql-toolbar {
   border: none !important;
 }
+
+.repeating-dots {
+  flex-grow: 1;
+  height: 2px;
+  background-image: radial-gradient(circle, #000 1px, transparent 1px);
+  background-size: 5px 2px;
+  margin-bottom: 6px;
+}
