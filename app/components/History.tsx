@@ -25,7 +25,7 @@ export async function History() {
     <div className='flex flex-col items-center gap-4' suppressHydrationWarning>
       <h1 className='font-bold text-4xl'>History</h1>
       <h2 className='text-lg text-gray-700'>Your personal chapters</h2>
-      <ul className='flex flex-col items-start gap-4 w-[400px]'>
+      <ul className='flex flex-col items-start gap-4 w-full lg:w-[400px]'>
         {player.history.map(
           (data: { name: string; leagueId: string }, index: number) => {
             return (

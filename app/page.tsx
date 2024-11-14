@@ -13,7 +13,7 @@ async function Home() {
       {session ? (
         <div className='flex flex-col gap-4 items-center'>
           <h2 className='text-lg font-bold'>TABLE OF CONTENTS</h2>
-          <ol className='flex flex-col gap-4 items-start w-[400px]'>
+          <ol className='flex flex-col gap-4 items-start w-full lg:w-[400px]'>
             <li className='w-full'>
               <Link
                 className='w-full flex flex-between items-end gap-1'
