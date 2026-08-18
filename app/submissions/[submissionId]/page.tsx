@@ -8,11 +8,12 @@ import { Preview } from "../../league/[leagueId]/[roundId]/components/Preview";
 import { ServerSubmission } from "../../types/FriendLeague";
 import { ShareButton } from "../ShareButton";
 
-export default async function SubmissionPage({
-  params,
-}: {
-  params: { submissionId: string };
-}) {
+export default async function SubmissionPage(
+  props: {
+    params: Promise<{ submissionId: string }>;
+  }
+) {
+  const params = await props.params;
   const submissionData = await getDocument("submissions", params.submissionId);
 
   if (!submissionData.exists()) {

@@ -6,14 +6,15 @@ import { ReviewStep } from "./ReviewStepWrapper";
 import { VotingStep } from "./VotingStepWrapper";
 import { WritingStep } from "./WritingStepWrapper";
 
-export default async function Round({
-  params,
-}: {
-  params: {
-    leagueId: string;
-    roundId: string;
-  };
-}) {
+export default async function Round(
+  props: {
+    params: Promise<{
+      leagueId: string;
+      roundId: string;
+    }>;
+  }
+) {
+  const params = await props.params;
   const { leagueId, roundId } = params;
   const user = await getPlayer();
   const {

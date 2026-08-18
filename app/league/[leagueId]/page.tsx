@@ -9,11 +9,12 @@ import { CopyLeagueId } from "../CopyLeagueId";
 import Loading from "./loading";
 import { RemoveUser } from "./RemoveUser";
 
-export default async function League({
-  params,
-}: {
-  params: { leagueId: string };
-}) {
+export default async function League(
+  props: {
+    params: Promise<{ leagueId: string }>;
+  }
+) {
+  const params = await props.params;
   const player = await getPlayer();
 
   const {

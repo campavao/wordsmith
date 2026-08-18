@@ -41,10 +41,8 @@ export async function GET(request: Request) {
 }
 
 // Create game
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { roundId: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ roundId: string }> }) {
+  const params = await props.params;
   const { submission, playerVote, leagueId } = await request.json();
   const { roundId } = params;
   const result = await updateRound({

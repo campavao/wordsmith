@@ -3,11 +3,12 @@ import { LeagueId } from "@/app/types/FriendLeague";
 import Error from "../error";
 import Link from "next/link";
 
-export default async function ResultsPage({
-  params,
-}: {
-  params: { leagueId: LeagueId };
-}) {
+export default async function ResultsPage(
+  props: {
+    params: Promise<{ leagueId: LeagueId }>;
+  }
+) {
+  const params = await props.params;
   const player = await getPlayer();
   const result = await getServerGame({
     leagueId: params.leagueId,
